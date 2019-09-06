@@ -1,0 +1,2 @@
+Trial,Framesize,Iteration,Agg Tx Rate (% Line Rate),Agg Rx Throughput (% Line Rate),Agg Rx Throughput (fps),Agg Rx Throughput (Mbps),Agg Tx Count (frames),Agg Rx Count (frames),Agg Frame Loss (frames),Agg Frame Loss (%),Min Latency (ns),Max Latency (ns),Avg Latency (ns)
+1,1240,15,1.386,1.386,13752.411,136.424,275096.000,275096.000,0.000,0.000,531960.000,4737220.000,3959506.000

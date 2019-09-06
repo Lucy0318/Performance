@@ -1,0 +1,329 @@
+*** Settings ***
+Library           SSHLibrary
+Library           Selenium2Library
+Library           Sonicwall
+Library           Telnet
+Library           Collections
+Library           breakingpoint    10.7.1.234    admin    admin
+Library           DateTime
+Resource          ../keyword/VM_keyword.txt
+
+*** Variables ***
+${slot}           1    # bp端口槽位号
+@{portList}       0    1    2    3    # 使用的bp端口
+${group}          2    # 使用bp端口的group id，范围1-12
+${ftp_server}     192.168.168.100    # ftp server ip address,选择和x0直联的网卡地址
+${ftp_username}    admin    # username
+${ftp_password}    admin    # password
+${ftp_uploadFile}    soniccore_sonicos-amd64-usr-6.5.0.2-8v-37-198-c48ef60c.0.swi    # 待升级版本
+${location}       C:/RF_test/report    # 测试报告保存地址，注意是斜杠方向”/"
+@{frameSize}      1518    #RFC254 测试包长
+&{UTMtest_control}    UTM_OFF=1    IPS_Max_Security=1    IPS_Perf_Optimized=0    GAV_Max_Security=0    GAV_Perf_Optimized=0    Anti_Spy_MaxSec=0    Anti_Spy_PerfOpt=0
+...               All_Max_Security=1    All_ Perf_Optimized=0    APP_Control=1    GAV_and_GAS=1    # UTM各种组合是否需要测试，值为1时测试，值为0时不测试
+@{IMIX_frameSize}    68    570    1518    # IIMIX测试包长
+@{IMIX_weight}    58    33    9    # IMIX weight
+&{TcpRate_test_control}    UTM_OFF=1    All_Max_Security=1    # TCPRate各种组合是否需要测试，值为1时测试，值为0时不测试
+@{Email_receiver}    lsun@sonicwall.com    # 执行结果Email接收列表
+
+*** Test Cases ***
+config switch
+    ###telnet登陆交换机###
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    Telnet-login-switch    ${data[0]["SWITCH_IP"]}
+    ###获取bp在交换机上对应的端口列表###
+    @{data1}=    read xls file    Virtual_topology.xlsx    BP-TO-SWITCH
+    @{SwitchPorList}    create list
+    : FOR    ${i}    IN    @{portList}
+    \    ${i}    evaluate    int(${i})
+    \    ${ports}    Get bp-to-switchportslist    ${slot}    ${i}    @{data1}
+    \    append to list    ${SwitchPorList}    ${ports}
+    Log Many    @{SwitchPorList}
+    ####删除BP端口其他vlan配置###
+    clear port vlan configiration    @{SwitchPorList}
+    ###配置Port###
+    log to console    config tag ports
+    : FOR    ${i}    ${j}    IN ZIP    ${data}    ${SwitchPorList}
+    \    ${vlan}    evaluate    int(${i["VLAN"]})
+    \    Telnet.write    no interface vlan ${vlan}
+    \    Telnet.Read Until Prompt
+    \    config_port_switchport    ${j}
+    \    config_port_switchport    ${i["TAG"]}
+    \    config_tag_port    ${j}    ${vlan}
+    \    config_tag_port    ${i["TAG"]}    ${vlan}
+    log to console    finish config switch!
+    Telnet.Close Connection
+    [Teardown]    Close Browser
+
+download version
+    ###enable x0 ssh###
+    login_by_https    192.168.168.168    admin    password    firefox
+    sleep    5
+    switch to classic mode
+    sleep    5
+    Enbale X0 SSH_https
+    sleep    5
+    Close Browser
+    ###获取盒子相关数据##
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    ###ping gateway check####
+    Comment    SSH-login-firewall    192.168.168.168
+    Comment    SSH-config_wan_ip    X1    ${data[0]["HOST_IP"]}    ${data[0]["NETMASK"]}    ${data[0]["GATEWAY"]}
+    Comment    sleep    1
+    Comment    SSHLibrary.Write    ping ${data[0]["GATEWAY"]}
+    Comment    sleep    5
+    Comment    SSHLibrary.Read Until    is alive
+    Comment    SSHLibrary.Close Connection
+    ###Factory-Restore ####
+    SSH-login-firewall    192.168.168.168
+    Set Client Configuration    prompt=#
+    download firewall version and reboot with factory-default    admin    admin    192.168.168.100    soniccore_sonicos-amd64-usr-6.5.0.2-8v-54-1214-d3fb9cfd.0.swi    240
+    [Teardown]    Close All Browsers
+
+config firewall
+    ###enable x0 ssh###
+    login_by_https_ex    192.168.168.168    admin    password    firefox
+    sleep    5
+    switch to classic mode
+    sleep    5
+    Enbale X0 SSH_https
+    sleep    5
+    Close Browser
+    ###Factory-Restore###
+    SSH-login-firewall    192.168.168.168
+    Set Client Configuration    prompt=#
+    SSH-Factory-Restore    200
+    ###enable x0 ssh after reboot###
+    login_by_https_ex    192.168.168.168    admin    password    firefox
+    sleep    5
+    switch to classic mode
+    sleep    5
+    Enbale X0 SSH_https
+    sleep    5
+    Close Browser
+    ###获取盒子相关数据##
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    ###ssh下完成测试相关配置####
+    SSH-login-firewall    192.168.168.168
+    Set Client Configuration    prompt=#
+    : FOR    ${i}    IN    @{data}
+    \    run key word if    '${i["LAN PORT"]}' != ''    SSH-config-Test-LAN    ${i["LAN PORT"]}    ${i["LAN IP"]}    ${i["LAN MASK"]}
+    \    run key word if    '${i["WAN PORT"]}' != ''    SSH-config-Test-WAN    ${i["WAN PORT"]}    ${i["WAN IP"]}    ${i["WAN MASK"]}
+    sleep    1
+    ###ping gateway check####
+    SSH-config_wan_ip    X1    ${data[0]["HOST_IP"]}    ${data[0]["NETMASK"]}    ${data[0]["GATEWAY"]}
+    sleep    1
+    SSHLibrary.Write    ping ${data[0]["GATEWAY"]}
+    sleep    5
+    SSHLibrary.Read Until    is alive
+    SSHLibrary.Close Connection
+    ###register ,max 5time###
+    @{data}=    read xls file    Virtual_topology.xlsx    License
+    ${sn}    ${code1}    ${code2}    Get_License    4Core
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    soniccore_register    ${sn}    ${code1}    ${code2}
+    : FOR    ${i}    IN RANGE    5
+    \    sleep    10
+    \    EXIT for loop if    '${result}' == 'PASS'
+    \    ${result}    ${returnvalue}    Run Keyword And Ignore Error    soniccore_register    ${sn}    ${code1}
+    \    ...    ${code2}
+    Run Keyword IF    '${result}' == 'FAIL'    FAIL    Firewall register failed!!
+    ...    ELSE    sleep    180
+    ###config WAN-TO-LAN ALLOW####
+    SSH-login-firewall    192.168.168.168
+    SSH-WAN-to-LAN Allow
+    ###config SPI enable####
+    SSH-MAX-SPI-Connections    180
+    SSHLibrary.Close Connection
+    LOG TO CONSOLE    Finish firewall config!
+
+RFC2544Test
+    [Template]
+    breakingpoint.Login
+    ###生成一个文件夹以及csv文件保存测试结果####
+    ${tm}    get_current_date
+    ${time}    evaluate    '${tm}'.replace(' ','-')
+    ${time}    evaluate    '${time}'.replace(':','-')
+    ${time}    evaluate    '${time}'.split('.')[0]
+    ${csv_name}    set Variable    4Core_RFC2544Result_${time}
+    Comment    ${path}    evaluate    '${version_path}'.split('/')[-1]
+    ${path}    evaluate    '4Core'+'_RFC2544'+'-'+'-Time'+'${time}'
+    ${location1}    evaluate    '${location}'+'/'+'${path}'
+    Create Folder    ${location1}
+    Create RFC2544 ReportFile    ${location1}    ${csv_name}.csv
+    ###telnet登陆交换机,clear mac dynamic###
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    ###从服务器上传配置文件到bp####
+    uploadBPT    //10.190.202.40/Shanghai QA/SystemTest/Perf2/BPS_UDP/VMware_RFC2544_Throughput.bpt    force=true
+    ###遍历各个字节，测试2544吞吐量###
+    : FOR    ${len}    IN    @{frameSize}
+    \    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    \    log to console    start test RFC2544 for 4Core with framelength ${len}
+    \    ${using_groupid}=    Get Groupid
+    \    ${i}    evaluate    '${group}' in ${using_groupid}
+    \    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    \    log to console    Use group:${group}
+    \    ###占用端口###
+    \    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    \    ###修改配置文件中的发包size###
+    \    setNormalTest    NN_name=VMware_RFC2544_Throughput
+    \    BpFileChangeFramelSize_4ports    ${len}
+    \    saveNormalTest    name=VMware_RFC2544_Throughput    force=true
+    \    ###使用修改字节后的配置文件，开始测试###
+    \    sleep    5
+    \    ${run_id}    RunTest    modelname=VMware_RFC2544_Throughput    group=${group}
+    \    Run Keyword IF    '${run_id}' == '-1'    FAIL    Run BP configuration file failed!!
+    \    ###run test case###
+    \    check test status    ${run_id}
+    \    ###get the report,以系统执行时间命名###
+    \    ${tm1}    get_current_date
+    \    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    \    ${time1}    evaluate    '${time1}'.replace(':','-')
+    \    ${time1}    evaluate    '${time1}'.split('.')[0]
+    \    ${reportname}    set Variable    4Core_${len}Byte_${time1}
+    \    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    \    sleep    10
+    \    ${result}=    GetTestResult    ${run_id}
+    \    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    \    ###unreserver ports###
+    \    Unreserve Ports    slot=${slot}    portList=@{portList}
+    \    sleep    5
+    \    ###report 转换为excel格式并分析###
+    \    @{list}    set variable    0    0    0    0
+    \    csv to xlsx    ${location1}    ${reportname}
+    \    @{list}    Get RFC2544Result 4ports    ${location1}    ${reportname}.xlsx    ${len}
+    \    Write To CsvFile    ${location1}    ${csv_name}    ${list[0]}    ${list[1]}    ${list[2]}
+    \    ...    ${list[3]}
+    \    log to console    finish test RFC2544 for 4Core with framelength ${len}
+    ${location2}    evaluate    '${location1}'+'/'+'${csv_name}.csv'
+    @{csv_data}=    read csv file    ${location2}
+    sendEmail_RFC2544    ${time}    ${ftp_uploadFile}    4Core    mail_receiver=@{Email_receiver}    csv_data=@{csv_data}
+    Logout
+    [Teardown]
+
+UTMTest
+    breakingpoint.Login
+    ###生成一个csv文件保存测试结果####
+    ${tm}    get_current_date
+    ${time}    evaluate    '${tm}'.replace(' ','-')
+    ${time}    evaluate    '${time}'.replace(':','-')
+    ${time}    evaluate    '${time}'.split('.')[0]
+    ${excel_name}    set Variable    4Core_UTMResult_${time}
+    ${path}    evaluate    '4Core'+'_HTTP'+'-Time'+'${time}'
+    ${location1}    evaluate    '${location}'+'/'+'${path}'
+    Create Folder    ${location1}
+    Create UTM ReportFile    ${location1}    ${excel_name}.xls
+    ###从服务器上传配置文件到bp####
+    uploadBPT    //10.190.202.40/Shanghai QA/SystemTest/Perf2/BPS_HTTPThroughput/VMWare_HTTP_Throughput.bpt    force=true
+    ###遍历各种情况UTM吞吐量###
+    run keyword if    ${UTMtest_control["UTM_OFF"]} == 1    HTTP_UTM_OFF_Test    4Core    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["IPS_Max_Security"]} == 1    HTTP_IPS_Max_Security_Test    4Core    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["IPS_Perf_Optimized"]} == 1    HTTP_IPS_Perf_Optimized_Test    4Core    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["GAV_Max_Security"]} == 1    HTTP_GAV_Max_Security_Test    4Core    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["GAV_Perf_Optimized"]} == 1    HTTP_GAV_Perf_Optimized_Test    4Core    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["Anti_Spy_MaxSec"]} == 1    HTTP_Anti_Spy_MaxSec_Test    4Core    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["Anti_Spy_PerfOpt"]} == 1    HTTP_Anti_Spy_PerfOpt_Test    4Core    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["All_Max_Security"]} == 1    HTTP_All_Max_Security_Test    4Core    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["All_ Perf_Optimized"]} == 1    HTTP_All_ Perf_Optimized_Test    4Core    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["APP_Control"]} == 1    HTTP_APP_Control_Test    4Core    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["GAV_and_GAS"]} == 1    HTTP_GAV_GAS_Control_Test    4Core    ${location1}    ${excel_name}.xls
+    Comment    ${location2}    evaluate    '${location1}'+'/'+'${excel_name}.xls'
+    Comment    @{csv_data}=    read xls file    ${location2}    UTM Result
+    Comment    sendEmail_UTMTest    ${time}    ${ftp_uploadFile}    4Core    mail_receiver=@{Email_receiver}    csv_data=@{csv_data}
+    Logout
+
+IMIXTest
+    breakingpoint.Login
+    ###生成一个文件夹以及csv文件保存测试结果####
+    ${tm}    get_current_date
+    ${time}    evaluate    '${tm}'.replace(' ','-')
+    ${time}    evaluate    '${time}'.replace(':','-')
+    ${time}    evaluate    '${time}'.split('.')[0]
+    ${csv_name}    set Variable    4Core_IMIX_${time}
+    Comment    ${path}    evaluate    '${version_path}'.split('/')[-1]
+    ${path}    evaluate    '4Core'+'_IMIX'+'-'+'-Time'+'${time}'
+    ${location1}    evaluate    '${location}'+'/'+'${path}'
+    Create Folder    ${location1}
+    Create IMIX ReportFile    ${location1}    ${csv_name}.csv
+    ###telnet登陆交换机,clear mac dynamic###
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    ###从服务器上传配置文件到bp####
+    uploadBPT    //10.190.202.40/Shanghai QA/SystemTest/Perf2/BPS_IMIX/VMWare_IMIX_Throughput.bpt    force=true
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test IMIX for 4Core
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###修改配置文件中的发包size###
+    setNormalTest    NN_name=VMWare_IMIX_Throughput
+    BpFileModify_IMIX_4ports
+    saveNormalTest    name=VMWare_IMIX_Throughput    force=true
+    ###使用修改字节后的配置文件，开始测试###
+    sleep    5
+    ${run_id}    RunTest    modelname=VMWare_IMIX_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    Run BP configuration file failed!!
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    4Core_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    @{list}    set variable    0    0
+    csv to xlsx    ${location1}    ${reportname}
+    @{list}    Get IMIXResult 4ports    ${location1}    ${reportname}.xlsx
+    Write To CsvFile    ${location1}    ${csv_name}    ${list[0]}    ${list[1]}
+    log to console    finish test IMIX for 4Core
+    Logout
+
+TcpRateTest
+    breakingpoint.Login
+    ###生成一个csv文件保存测试结果####
+    ${tm}    get_current_date
+    ${time}    evaluate    '${tm}'.replace(' ','-')
+    ${time}    evaluate    '${time}'.replace(':','-')
+    ${time}    evaluate    '${time}'.split('.')[0]
+    ${excel_name}    set Variable    4Core_TCPRate_Result_${time}
+    ${path}    evaluate    '4Core'+'_TCPRate'+'-Time'+'${time}'
+    ${location1}    evaluate    '${location}'+'/'+'${path}'
+    Create Folder    ${location1}
+    Create TCPRate ReportFile    ${location1}    ${excel_name}.xls
+    ###从服务器上传配置文件到bp####
+    uploadBPT    //10.190.202.40/Shanghai QA/SystemTest/Perf2/BPS_TCPRate/VMWare_TCP_Rate_4Core.bpt    force=true
+    ###遍历各种情况UTM吞吐量###
+    run keyword if    ${TcpRate_test_control["UTM_OFF"]} == 1    TcpRate_UTM_OFF_Test    4Core    ${location1}    ${excel_name}.xls
+    run keyword if    ${TcpRate_test_control["All_Max_Security"]} == 1    TcpRate_All_Max_Security_Test    4Core    ${location1}    ${excel_name}.xls
+    Logout
+
+deregister_web
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    deregister
+    sleep    3
+    : FOR    ${i}    IN RANGE    3
+    \    sleep    5
+    \    EXIT for loop if    '${result}' == 'PASS'
+    \    ${result}    ${returnvalue}    Run Keyword And Ignore Error    deregister
+    Run Keyword IF    '${result}' == 'FAIL'    FAIL    Firewall deregister failed!!
+    ...    ELSE    sleep    200
+
+*** Keywords ***
+delete_vlan
+    ###telnet登陆交换机###
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    Telnet-login-switch    ${data[0]["SWITCH_IP"]}
+    : FOR    ${i}    IN    @{data}
+    \    ${vlan}    evaluate    int(${i["VLAN"]})
+    \    Telnet.write    no interface vlan ${vlan}
+    \    sleep    1
+    \    Telnet.read
+    sleep    1
+    Telnet.Close Connection

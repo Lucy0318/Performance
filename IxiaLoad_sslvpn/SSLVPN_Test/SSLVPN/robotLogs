@@ -1,0 +1,2818 @@
+
+19:26:04.246000: 
+	POST: http://localhost:8080/api/v0/sessions
+	DATA: {"ixLoadVersion": "8.40.115.169"}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 201
+
+19:26:05.268000: 
+	POST: http://localhost:8080/api/v0/sessions/0/operations/start
+	DATA: {}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+
+
+
+19:26:05.278000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 1/200 seconds
+
+19:26:06.288000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 2/200 seconds
+
+19:26:07.301000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 3/200 seconds
+
+19:26:08.308000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 4/200 seconds
+
+19:26:09.326000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 5/200 seconds
+
+19:26:10.339000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 6/200 seconds
+
+19:26:11.351000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 7/200 seconds
+
+19:26:12.383000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 8/200 seconds
+
+19:26:13.410000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 9/200 seconds
+
+19:26:14.423000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 10/200 seconds
+
+19:26:15.438000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 11/200 seconds
+
+19:26:16.458000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 12/200 seconds
+
+19:26:17.471000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 13/200 seconds
+
+19:26:18.572000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 14/200 seconds
+
+19:26:19.587000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 15/200 seconds
+
+19:26:20.597000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 16/200 seconds
+
+19:26:21.618000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 17/200 seconds
+
+19:26:22.708000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 18/200 seconds
+
+19:26:23.771000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 19/200 seconds
+
+19:26:24.781000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 20/200 seconds
+
+19:26:25.802000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 21/200 seconds
+
+19:26:26.813000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 22/200 seconds
+
+19:26:27.831000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 23/200 seconds
+
+19:26:28.843000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 24/200 seconds
+
+19:26:29.862000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 25/200 seconds
+
+19:26:30.892000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 26/200 seconds
+
+19:26:31.910000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 27/200 seconds
+
+19:26:32.994000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 28/200 seconds
+
+19:26:34.010000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 29/200 seconds
+
+19:26:35.019000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 30/200 seconds
+
+19:26:36.040000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 31/200 seconds
+
+19:26:37.055000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 32/200 seconds
+
+19:26:38.156000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 33/200 seconds
+
+19:26:39.178000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 34/200 seconds
+
+19:26:40.209000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 35/200 seconds
+
+19:26:41.219000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 36/200 seconds
+
+19:26:42.237000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 37/200 seconds
+
+19:26:43.255000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 38/200 seconds
+
+19:26:44.268000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 39/200 seconds
+
+19:26:45.280000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 40/200 seconds
+
+19:26:46.307000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 41/200 seconds
+
+19:26:47.321000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 42/200 seconds
+
+19:26:48.703000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 43/200 seconds
+
+19:26:49.728000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 44/200 seconds
+
+19:26:50.770000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 45/200 seconds
+
+19:26:51.794000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 46/200 seconds
+
+19:26:52.827000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 47/200 seconds
+
+19:26:53.865000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 48/200 seconds
+
+19:26:54.888000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 49/200 seconds
+
+19:26:55.897000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 50/200 seconds
+
+19:26:56.917000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 51/200 seconds
+
+19:26:57.929000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 52/200 seconds
+
+19:26:58.971000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 53/200 seconds
+
+19:26:59.978000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 54/200 seconds
+
+19:27:01.015000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 55/200 seconds
+
+19:27:02.023000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 56/200 seconds
+
+19:27:03.075000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 57/200 seconds
+
+19:27:04.112000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 58/200 seconds
+
+19:27:05.163000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 59/200 seconds
+
+19:27:06.177000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 60/200 seconds
+
+19:27:07.193000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 61/200 seconds
+
+19:27:08.207000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 62/200 seconds
+
+19:27:09.217000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 63/200 seconds
+
+19:27:10.229000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 64/200 seconds
+
+19:27:11.280000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 65/200 seconds
+
+19:27:12.293000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: True
+
+19:27:12.538000: 
+	POST: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/
+	DATA: {"fullPath": "C:/IxiaLoad_sslvpn/SSLVPN_Conf/IxLoad_conf/9200/9200_LAN_To_SSLVPN.rxf"}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+19:27:12.574000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: Not started. Wait 1/3600 seconds...
+
+19:27:13.599000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 2/3600 seconds...
+
+19:27:14.642000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 3/3600 seconds...
+
+19:27:15.698000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 4/3600 seconds...
+
+19:27:16.794000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 5/3600 seconds...
+
+19:27:18.925000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 6/3600 seconds...
+
+19:27:20.012000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 7/3600 seconds...
+
+19:27:21.086000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 8/3600 seconds...
+
+19:27:22.174000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 9/3600 seconds...
+
+19:27:23.233000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 10/3600 seconds...
+
+19:27:24.328000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 11/3600 seconds...
+
+19:27:25.398000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 12/3600 seconds...
+
+19:27:26.428000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 13/3600 seconds...
+
+19:27:27.565000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 14/3600 seconds...
+
+19:27:28.619000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 15/3600 seconds...
+
+19:27:29.774000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 16/3600 seconds...
+
+19:27:30.814000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 17/3600 seconds...
+
+19:27:31.934000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 18/3600 seconds...
+
+19:27:33.091000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 19/3600 seconds...
+
+19:27:34.154000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 20/3600 seconds...
+
+19:27:35.206000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 21/3600 seconds...
+
+19:27:36.350000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 22/3600 seconds...
+
+19:27:37.405000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 23/3600 seconds...
+
+19:27:38.566000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 24/3600 seconds...
+
+19:27:39.620000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 25/3600 seconds...
+
+19:27:40.678000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 26/3600 seconds...
+
+19:27:41.841000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 27/3600 seconds...
+
+19:27:43.715000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 28/3600 seconds...
+
+19:27:44.771000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 29/3600 seconds...
+
+19:27:45.806000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 30/3600 seconds...
+
+19:27:46.831000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 31/3600 seconds...
+
+19:27:48.610000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 32/3600 seconds...
+
+19:27:49.648000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 33/3600 seconds...
+
+19:27:50.687000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 34/3600 seconds...
+
+19:27:51.797000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 35/3600 seconds...
+
+19:27:52.834000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 36/3600 seconds...
+
+19:27:53.962000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 37/3600 seconds...
+
+19:27:55.026000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 38/3600 seconds...
+
+19:27:56.226000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 39/3600 seconds...
+
+19:27:57.293000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 40/3600 seconds...
+
+19:27:58.314000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 41/3600 seconds...
+
+19:27:59.353000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 42/3600 seconds...
+
+19:28:00.400000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 43/3600 seconds...
+
+19:28:01.444000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+19:28:01.532000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+19:28:01.612000: 
+Chassis Ip exists in config. No need to add new chassis
+assignChassisAndPorts: To new chassis: /api/v0/sessions/0/ixLoad/chassisChain/chassisList/0
+
+19:28:01.614000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/activeTest/communityList/
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+19:28:01.697000: 
+	POST: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0/operations/refreshConnection
+	DATA: {}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+19:28:01.815000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0/operations/refreshConnection/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 1/3600 seconds...
+
+19:28:03.049000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0/operations/refreshConnection/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 2/3600 seconds...
+
+19:28:04.091000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0/operations/refreshConnection/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 3/3600 seconds...
+
+19:28:05.125000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0/operations/refreshConnection/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 4/3600 seconds...
+
+19:28:06.182000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0/operations/refreshConnection/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 5/3600 seconds...
+
+19:28:07.468000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0/operations/refreshConnection/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 6/3600 seconds...
+
+19:28:08.539000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0/operations/refreshConnection/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+19:28:08.621000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+waitForChassisIpToConnect: Status: True
+Chassis is connected
+assignChassisAndPorts URL: http://localhost:8080/api/v0/sessions/0/ixLoad/test/activeTest/communityList/0/network/portList
+assignChassisAndPorts Params: {"chassisId": 1, "portId": "7", "cardId": "5"}
+
+19:28:08.659000: 
+	POST: http://localhost:8080/api/v0/sessions/0/ixLoad/test/activeTest/communityList/0/network/portList
+	DATA: {"chassisId": 1, "portId": "7", "cardId": "5"}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 400
+5/7 is already assigned
+assignChassisAndPorts URL: http://localhost:8080/api/v0/sessions/0/ixLoad/test/activeTest/communityList/1/network/portList
+assignChassisAndPorts Params: {"chassisId": 1, "portId": "8", "cardId": "5"}
+
+19:28:08.964000: 
+	POST: http://localhost:8080/api/v0/sessions/0/ixLoad/test/activeTest/communityList/1/network/portList
+	DATA: {"chassisId": 1, "portId": "8", "cardId": "5"}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 400
+5/8 is already assigned
+
+19:28:09.001000: 
+	PATCH: http://localhost:8080/api/v0/sessions/0/ixLoad/test/activeTest
+	DATA: {'enableForceOwnership': True}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 204
+
+19:28:09.036000: 
+getStatNames: http://localhost:8080/api/v0/sessions/0/ixLoad/stats
+
+
+19:28:09.036000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/stats
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	/api/v0/sessions/0/ixLoad/stats/HTTPServerPerURL
+	/api/v0/sessions/0/ixLoad/stats/IxServer
+	/api/v0/sessions/0/ixLoad/stats/HTTPServer
+	/api/v0/sessions/0/ixLoad/stats/HTTPClientPerURL
+	/api/v0/sessions/0/ixLoad/stats/docs
+	/api/v0/sessions/0/ixLoad/stats/RunState
+	/api/v0/sessions/0/ixLoad/stats/HTTPClient
+
+19:28:09.758000: 
+	POST: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest
+	DATA: {}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+19:28:09.786000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: Not started. Wait 1/3600 seconds...
+
+19:28:10.814000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 2/3600 seconds...
+
+19:28:11.862000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 3/3600 seconds...
+
+19:28:13.334000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 4/3600 seconds...
+
+19:28:14.354000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 5/3600 seconds...
+
+19:28:15.427000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 6/3600 seconds...
+
+19:28:16.515000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 7/3600 seconds...
+
+19:28:17.543000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 8/3600 seconds...
+
+19:28:18.583000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 9/3600 seconds...
+
+19:28:19.616000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 10/3600 seconds...
+
+19:28:20.668000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 11/3600 seconds...
+
+19:28:21.721000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 12/3600 seconds...
+
+19:28:22.781000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 13/3600 seconds...
+
+19:28:23.828000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 14/3600 seconds...
+
+19:28:24.851000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 15/3600 seconds...
+
+19:28:25.882000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 16/3600 seconds...
+
+19:28:26.955000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 17/3600 seconds...
+
+19:28:27.990000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 18/3600 seconds...
+
+19:28:29.042000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 19/3600 seconds...
+
+19:28:30.076000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 20/3600 seconds...
+
+19:28:31.109000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 21/3600 seconds...
+
+19:28:32.153000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 22/3600 seconds...
+
+19:28:33.187000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 23/3600 seconds...
+
+19:28:34.219000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 24/3600 seconds...
+
+19:28:35.247000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 25/3600 seconds...
+
+19:28:36.283000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 26/3600 seconds...
+
+19:28:37.308000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 27/3600 seconds...
+
+19:28:38.356000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 28/3600 seconds...
+
+19:28:39.405000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 29/3600 seconds...
+
+19:28:40.446000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 30/3600 seconds...
+
+19:28:41.474000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 31/3600 seconds...
+
+19:28:42.528000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 32/3600 seconds...
+
+19:28:43.565000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 33/3600 seconds...
+
+19:28:44.599000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 34/3600 seconds...
+
+19:28:45.669000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 35/3600 seconds...
+
+19:28:46.721000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 36/3600 seconds...
+
+19:28:48.371000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 37/3600 seconds...
+
+19:28:49.433000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 38/3600 seconds...
+
+19:28:50.470000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 39/3600 seconds...
+
+19:28:51.519000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 40/3600 seconds...
+
+19:28:52.593000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 41/3600 seconds...
+
+19:28:53.656000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 42/3600 seconds...
+
+19:28:54.682000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 43/3600 seconds...
+
+19:28:55.749000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 44/3600 seconds...
+
+19:28:56.803000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 45/3600 seconds...
+
+19:28:57.848000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 46/3600 seconds...
+
+19:28:58.934000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 47/3600 seconds...
+
+19:28:59.976000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 48/3600 seconds...
+
+19:29:01.019000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 49/3600 seconds...
+
+19:29:02.051000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 50/3600 seconds...
+
+19:29:03.097000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 51/3600 seconds...
+
+19:29:04.153000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 52/3600 seconds...
+
+19:29:05.196000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 53/3600 seconds...
+
+19:29:06.259000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 54/3600 seconds...
+
+19:29:07.341000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 55/3600 seconds...
+
+19:29:08.439000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 56/3600 seconds...
+
+19:29:09.500000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 57/3600 seconds...
+
+19:29:10.560000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 58/3600 seconds...
+
+19:29:11.612000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 59/3600 seconds...
+
+19:29:13.281000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 60/3600 seconds...
+
+19:29:14.303000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 61/3600 seconds...
+
+19:29:15.357000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 62/3600 seconds...
+
+19:29:16.416000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+19:29:16.493000: ActiveTest current status: Running
+
+HTTPClient:
+
+HTTPServer:
+	TCP Connections Established: 0
+
+19:29:24.605000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 0
+	HTTP Bytes: 3218334
+
+HTTPServer:
+	TCP Connections Established: 9
+
+19:29:29.782000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 0
+	HTTP Bytes: 4721961
+
+HTTPServer:
+	TCP Connections Established: 9
+
+19:29:34.994000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 0
+	HTTP Bytes: 4721961
+
+HTTPServer:
+	TCP Connections Established: 9
+
+19:29:40.270000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 30
+	HTTP Bytes: 8989826
+
+HTTPServer:
+	TCP Connections Established: 18
+
+19:29:45.659000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 30
+	HTTP Bytes: 9443922
+
+HTTPServer:
+	TCP Connections Established: 18
+
+19:29:50.959000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 30
+	HTTP Bytes: 9443922
+
+HTTPServer:
+	TCP Connections Established: 18
+
+19:29:56.292000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 60
+	HTTP Bytes: 12591894
+
+HTTPServer:
+	TCP Connections Established: 24
+
+19:30:01.587000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 60
+	HTTP Bytes: 12591894
+
+HTTPServer:
+	TCP Connections Established: 24
+
+19:30:07.062000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 61
+	HTTP Bytes: 12591894
+
+HTTPServer:
+	TCP Connections Established: 25
+
+19:30:12.477000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 90
+	HTTP Bytes: 20461827
+
+HTTPServer:
+	TCP Connections Established: 39
+
+19:30:17.725000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 90
+	HTTP Bytes: 20461827
+
+HTTPServer:
+	TCP Connections Established: 39
+
+19:30:23.237000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 91
+	HTTP Bytes: 20461827
+
+HTTPServer:
+	TCP Connections Established: 40
+
+19:30:28.721000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 120
+	HTTP Bytes: 25183788
+
+HTTPServer:
+	TCP Connections Established: 48
+
+19:30:34.277000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 120
+	HTTP Bytes: 25183788
+
+HTTPServer:
+	TCP Connections Established: 48
+
+19:30:39.772000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 150
+	HTTP Bytes: 28331760
+
+HTTPServer:
+	TCP Connections Established: 54
+
+19:30:45.130000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 150
+	HTTP Bytes: 28331760
+
+HTTPServer:
+	TCP Connections Established: 54
+
+19:30:50.389000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 150
+	HTTP Bytes: 28331760
+
+HTTPServer:
+	TCP Connections Established: 54
+
+19:30:55.832000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 180
+	HTTP Bytes: 36201693
+
+HTTPServer:
+	TCP Connections Established: 69
+
+19:31:01.299000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 180
+	HTTP Bytes: 36201693
+
+HTTPServer:
+	TCP Connections Established: 69
+
+19:31:07.273000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 180
+	HTTP Bytes: 36201693
+
+HTTPServer:
+	TCP Connections Established: 69
+
+19:31:12.621000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 210
+	HTTP Bytes: 40923654
+
+HTTPServer:
+	TCP Connections Established: 78
+
+19:31:17.888000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 210
+	HTTP Bytes: 40923654
+
+HTTPServer:
+	TCP Connections Established: 78
+
+19:31:23.478000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 211
+	HTTP Bytes: 40923654
+
+HTTPServer:
+	TCP Connections Established: 84
+
+19:31:28.910000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 240
+	HTTP Bytes: 44071626
+
+HTTPServer:
+	TCP Connections Established: 84
+
+19:31:34.301000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 240
+	HTTP Bytes: 44071626
+
+HTTPServer:
+	TCP Connections Established: 84
+
+19:31:39.699000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 270
+	HTTP Bytes: 51487463
+
+HTTPServer:
+	TCP Connections Established: 99
+
+19:31:45.200000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 270
+	HTTP Bytes: 51941559
+
+HTTPServer:
+	TCP Connections Established: 99
+
+19:31:50.603000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 270
+	HTTP Bytes: 51941559
+
+HTTPServer:
+	TCP Connections Established: 99
+
+19:31:56.088000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 300
+	HTTP Bytes: 56663520
+
+HTTPServer:
+	TCP Connections Established: 108
+
+19:32:01.534000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 300
+	HTTP Bytes: 56663520
+
+HTTPServer:
+	TCP Connections Established: 108
+
+19:32:07.352000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 300
+	HTTP Bytes: 56663520
+
+HTTPServer:
+	TCP Connections Established: 108
+
+19:32:12.674000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 330
+	HTTP Bytes: 59811492
+
+HTTPServer:
+	TCP Connections Established: 114
+
+19:32:17.940000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 330
+	HTTP Bytes: 59811492
+
+HTTPServer:
+	TCP Connections Established: 114
+
+19:32:23.284000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 331
+	HTTP Bytes: 59811492
+
+HTTPServer:
+	TCP Connections Established: 115
+
+19:32:28.566000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 360
+	HTTP Bytes: 67681425
+
+HTTPServer:
+	TCP Connections Established: 129
+
+19:32:34.149000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 360
+	HTTP Bytes: 67681425
+
+HTTPServer:
+	TCP Connections Established: 129
+
+19:32:39.527000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 362
+	HTTP Bytes: 69921207
+
+HTTPServer:
+	TCP Connections Established: 138
+
+19:32:44.916000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 390
+	HTTP Bytes: 72403386
+
+HTTPServer:
+	TCP Connections Established: 138
+
+19:32:50.348000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 390
+	HTTP Bytes: 72403386
+
+HTTPServer:
+	TCP Connections Established: 138
+
+19:32:55.685000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 420
+	HTTP Bytes: 75551358
+
+HTTPServer:
+	TCP Connections Established: 144
+
+19:33:01.107000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 420
+	HTTP Bytes: 75551358
+
+HTTPServer:
+	TCP Connections Established: 144
+
+19:33:06.384000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 420
+	HTTP Bytes: 75551358
+
+HTTPServer:
+	TCP Connections Established: 144
+
+19:33:12.643000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 450
+	HTTP Bytes: 83421291
+
+HTTPServer:
+	TCP Connections Established: 159
+
+19:33:17.976000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 450
+	HTTP Bytes: 83421291
+
+HTTPServer:
+	TCP Connections Established: 159
+
+19:33:23.612000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 474
+	HTTP Bytes: 86780966
+
+HTTPServer:
+	TCP Connections Established: 165
+
+19:33:28.962000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 480
+	HTTP Bytes: 88143252
+
+HTTPServer:
+	TCP Connections Established: 168
+
+19:33:34.272000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 480
+	HTTP Bytes: 88143252
+
+HTTPServer:
+	TCP Connections Established: 168
+
+19:33:39.662000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 510
+	HTTP Bytes: 91291224
+
+HTTPServer:
+	TCP Connections Established: 174
+
+19:33:45.067000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 510
+	HTTP Bytes: 91291224
+
+HTTPServer:
+	TCP Connections Established: 174
+
+19:33:50.379000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 510
+	HTTP Bytes: 91291224
+
+HTTPServer:
+	TCP Connections Established: 174
+
+19:33:55.733000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 540
+	HTTP Bytes: 99161157
+
+HTTPServer:
+	TCP Connections Established: 189
+
+19:34:01.157000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 540
+	HTTP Bytes: 99161157
+
+HTTPServer:
+	TCP Connections Established: 189
+
+19:34:06.442000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 540
+	HTTP Bytes: 99161157
+
+HTTPServer:
+	TCP Connections Established: 189
+
+19:34:12.503000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 570
+	HTTP Bytes: 103883118
+
+HTTPServer:
+	TCP Connections Established: 198
+
+19:34:17.875000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 570
+	HTTP Bytes: 103883118
+
+HTTPServer:
+	TCP Connections Established: 198
+
+19:34:23.500000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 571
+	HTTP Bytes: 103883118
+
+HTTPServer:
+	TCP Connections Established: 198
+
+19:34:28.993000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 600
+	HTTP Bytes: 107031090
+
+HTTPServer:
+	TCP Connections Established: 204
+
+19:34:34.509000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 600
+	HTTP Bytes: 107031090
+
+HTTPServer:
+	TCP Connections Established: 204
+
+19:34:39.841000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 624
+	HTTP Bytes: 107031090
+
+HTTPServer:
+	TCP Connections Established: 204
+
+19:34:45.253000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 624
+	HTTP Bytes: 107031090
+
+HTTPServer:
+	TCP Connections Established: 204
+
+19:34:50.809000: ActiveTest current status: Running
+
+HTTPClient:
+	HTTP Concurrent Connections: 0
+	TCP Timeouts: 624
+	HTTP Bytes: 107031090
+
+HTTPServer:
+	TCP Connections Established: 204
+
+19:34:56.259000: ActiveTest current status: Stopping Run
+	Waiting 1/40 seconds
+
+19:34:57.316000: ActiveTest current status: Stopping Run
+	Waiting 2/40 seconds
+
+19:34:58.437000: ActiveTest current status: Stopping Run
+	Waiting 3/40 seconds
+
+19:34:59.510000: ActiveTest current status: Stopping Run
+	Waiting 4/40 seconds
+
+19:35:00.577000: ActiveTest current status: Cleaning
+	Waiting 5/40 seconds
+
+19:35:01.646000: ActiveTest current status: Cleaning
+	Waiting 6/40 seconds
+
+19:35:02.751000: ActiveTest current status: Cleaning
+	Waiting 7/40 seconds
+
+19:35:03.846000: ActiveTest current status: Cleaning
+	Waiting 8/40 seconds
+
+19:35:04.916000: ActiveTest current status: Cleaning
+	Waiting 9/40 seconds
+
+19:35:05.978000: ActiveTest current status: Cleaning
+	Waiting 10/40 seconds
+
+19:35:07.385000: ActiveTest current status: Unconfigured
+
+19:35:07.390000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+19:35:07.424000: 
+
+
+19:35:07.425000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/activeTest
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+19:35:07.473000: waitForActiveTestToUnconfigure current state:Unconfigured
+19:35:07.474000: 
+ActiveTest is Unconfigured
+
+19:35:17.761000: 
+	DELETE: http://localhost:8080/api/v0/sessions/0
+	DATA: {}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 204
+
+19:37:26.945000: 
+	POST: http://localhost:8080/api/v0/sessions
+	DATA: {"ixLoadVersion": "8.40.115.169"}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 201
+
+19:37:26.972000: 
+	POST: http://localhost:8080/api/v0/sessions/0/operations/start
+	DATA: {}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+
+
+
+19:37:26.991000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 1/200 seconds
+
+19:37:28.011000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 2/200 seconds
+
+19:37:29.050000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 3/200 seconds
+
+19:37:30.069000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 4/200 seconds
+
+19:37:31.087000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 5/200 seconds
+
+19:37:32.133000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 6/200 seconds
+
+19:37:33.160000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 7/200 seconds
+
+19:37:34.171000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 8/200 seconds
+
+19:37:35.181000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 9/200 seconds
+
+19:37:36.203000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 10/200 seconds
+
+19:37:37.216000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 11/200 seconds
+
+19:37:38.280000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 12/200 seconds
+
+19:37:39.293000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 13/200 seconds
+
+19:37:40.347000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 14/200 seconds
+
+19:37:41.396000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 15/200 seconds
+
+19:37:42.405000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 16/200 seconds
+
+19:37:43.415000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 17/200 seconds
+
+19:37:44.445000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 18/200 seconds
+
+19:37:45.486000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 19/200 seconds
+
+19:37:46.492000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 20/200 seconds
+
+19:37:47.514000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 21/200 seconds
+
+19:37:48.859000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 22/200 seconds
+
+19:37:49.870000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 23/200 seconds
+
+19:37:50.891000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 24/200 seconds
+
+19:37:51.924000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 25/200 seconds
+
+19:37:52.942000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 26/200 seconds
+
+19:37:53.959000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 27/200 seconds
+
+19:37:55.008000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 28/200 seconds
+
+19:37:56.032000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 29/200 seconds
+
+19:37:57.042000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 30/200 seconds
+
+19:37:58.083000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 31/200 seconds
+
+19:37:59.107000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 32/200 seconds
+
+19:38:00.156000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 33/200 seconds
+
+19:38:01.172000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 34/200 seconds
+
+19:38:02.209000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 35/200 seconds
+
+19:38:03.234000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 36/200 seconds
+
+19:38:04.257000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 37/200 seconds
+
+19:38:05.289000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 38/200 seconds
+
+19:38:06.306000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 39/200 seconds
+
+19:38:07.316000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: False
+	Wait 40/200 seconds
+
+19:38:08.331000: 
+	GET: http://localhost:8080/api/v0/sessions/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	CurrentStatus: True
+
+19:38:08.365000: 
+	POST: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/
+	DATA: {"fullPath": "C:/IxiaLoad_sslvpn/SSLVPN_Conf/IxLoad_conf/9200/9200_SSLVPN_To_LAN.rxf"}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+19:38:08.489000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: Not started. Wait 1/3600 seconds...
+
+19:38:09.519000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 2/3600 seconds...
+
+19:38:11.034000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 3/3600 seconds...
+
+19:38:12.106000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 4/3600 seconds...
+
+19:38:14.096000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 5/3600 seconds...
+
+19:38:15.145000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 6/3600 seconds...
+
+19:38:16.196000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 7/3600 seconds...
+
+19:38:17.238000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 8/3600 seconds...
+
+19:38:19.137000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 9/3600 seconds...
+
+19:38:20.168000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 10/3600 seconds...
+
+19:38:21.224000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 11/3600 seconds...
+
+19:38:22.352000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 12/3600 seconds...
+
+19:38:23.390000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 13/3600 seconds...
+
+19:38:24.426000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 14/3600 seconds...
+
+19:38:25.454000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 15/3600 seconds...
+
+19:38:26.594000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 16/3600 seconds...
+
+19:38:27.696000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 17/3600 seconds...
+
+19:38:28.725000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 18/3600 seconds...
+
+19:38:29.792000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 19/3600 seconds...
+
+19:38:30.940000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 20/3600 seconds...
+
+19:38:32.002000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 21/3600 seconds...
+
+19:38:33.065000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 22/3600 seconds...
+
+19:38:34.084000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 23/3600 seconds...
+
+19:38:35.133000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 24/3600 seconds...
+
+19:38:36.287000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 25/3600 seconds...
+
+19:38:37.508000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 26/3600 seconds...
+
+19:38:38.579000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 27/3600 seconds...
+
+19:38:39.640000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 28/3600 seconds...
+
+19:38:40.667000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 29/3600 seconds...
+
+19:38:41.720000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 30/3600 seconds...
+
+19:38:43.487000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 31/3600 seconds...
+
+19:38:44.786000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 32/3600 seconds...
+
+19:38:45.831000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 33/3600 seconds...
+
+19:38:46.883000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 34/3600 seconds...
+
+19:38:48.754000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 35/3600 seconds...
+
+19:38:49.789000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 36/3600 seconds...
+
+19:38:50.833000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 37/3600 seconds...
+
+19:38:51.944000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 38/3600 seconds...
+
+19:38:52.985000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/loadTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+19:38:53.032000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+19:38:53.074000: 
+Chassis Ip exists in config. No need to add new chassis
+assignChassisAndPorts: To new chassis: /api/v0/sessions/0/ixLoad/chassisChain/chassisList/0
+
+19:38:53.075000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/activeTest/communityList/
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+19:38:53.125000: 
+	POST: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0/operations/refreshConnection
+	DATA: {}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+19:38:53.182000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0/operations/refreshConnection/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: Not started. Wait 1/3600 seconds...
+
+19:38:54.212000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0/operations/refreshConnection/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 2/3600 seconds...
+
+19:38:55.251000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0/operations/refreshConnection/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 3/3600 seconds...
+
+19:38:56.301000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0/operations/refreshConnection/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 4/3600 seconds...
+
+19:38:57.376000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0/operations/refreshConnection/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 5/3600 seconds...
+
+19:38:58.403000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0/operations/refreshConnection/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 6/3600 seconds...
+
+19:38:59.432000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0/operations/refreshConnection/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+19:38:59.464000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/chassisChain/chassisList/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+waitForChassisIpToConnect: Status: True
+Chassis is connected
+assignChassisAndPorts URL: http://localhost:8080/api/v0/sessions/0/ixLoad/test/activeTest/communityList/0/network/portList
+assignChassisAndPorts Params: {"chassisId": 1, "portId": "7", "cardId": "5"}
+
+19:38:59.510000: 
+	POST: http://localhost:8080/api/v0/sessions/0/ixLoad/test/activeTest/communityList/0/network/portList
+	DATA: {"chassisId": 1, "portId": "7", "cardId": "5"}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 400
+5/7 is already assigned
+assignChassisAndPorts URL: http://localhost:8080/api/v0/sessions/0/ixLoad/test/activeTest/communityList/1/network/portList
+assignChassisAndPorts Params: {"chassisId": 1, "portId": "8", "cardId": "5"}
+
+19:39:00.135000: 
+	POST: http://localhost:8080/api/v0/sessions/0/ixLoad/test/activeTest/communityList/1/network/portList
+	DATA: {"chassisId": 1, "portId": "8", "cardId": "5"}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 400
+5/8 is already assigned
+
+19:39:00.183000: 
+	PATCH: http://localhost:8080/api/v0/sessions/0/ixLoad/test/activeTest
+	DATA: {'enableForceOwnership': True}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 204
+
+19:39:00.224000: 
+getStatNames: http://localhost:8080/api/v0/sessions/0/ixLoad/stats
+
+
+19:39:00.224000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/stats
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	/api/v0/sessions/0/ixLoad/stats/HTTPServerPerURL
+	/api/v0/sessions/0/ixLoad/stats/IxServer
+	/api/v0/sessions/0/ixLoad/stats/HTTPServer
+	/api/v0/sessions/0/ixLoad/stats/HTTPClientPerURL
+	/api/v0/sessions/0/ixLoad/stats/docs
+	/api/v0/sessions/0/ixLoad/stats/RunState
+	/api/v0/sessions/0/ixLoad/stats/HTTPClient
+
+19:39:00.631000: 
+	POST: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest
+	DATA: {}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+19:39:00.658000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: Not started. Wait 1/3600 seconds...
+
+19:39:01.685000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 2/3600 seconds...
+
+19:39:02.955000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 3/3600 seconds...
+
+19:39:04.021000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 4/3600 seconds...
+
+19:39:05.059000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 5/3600 seconds...
+
+19:39:06.108000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 6/3600 seconds...
+
+19:39:07.136000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 7/3600 seconds...
+
+19:39:08.167000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 8/3600 seconds...
+
+19:39:09.200000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 9/3600 seconds...
+
+19:39:10.249000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 10/3600 seconds...
+
+19:39:11.288000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 11/3600 seconds...
+
+19:39:12.337000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 12/3600 seconds...
+
+19:39:13.365000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 13/3600 seconds...
+
+19:39:14.423000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 14/3600 seconds...
+
+19:39:15.473000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 15/3600 seconds...
+
+19:39:16.540000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 16/3600 seconds...
+
+19:39:17.604000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 17/3600 seconds...
+
+19:39:18.700000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 18/3600 seconds...
+
+19:39:19.738000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 19/3600 seconds...
+
+19:39:20.800000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 20/3600 seconds...
+
+19:39:21.819000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 21/3600 seconds...
+
+19:39:22.884000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 22/3600 seconds...
+
+19:39:23.928000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 23/3600 seconds...
+
+19:39:24.989000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 24/3600 seconds...
+
+19:39:26.031000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 25/3600 seconds...
+
+19:39:27.100000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 26/3600 seconds...
+
+19:39:28.127000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 27/3600 seconds...
+
+19:39:29.224000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 28/3600 seconds...
+
+19:39:30.256000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 29/3600 seconds...
+
+19:39:31.323000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 30/3600 seconds...
+
+19:39:32.362000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 31/3600 seconds...
+
+19:39:33.468000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 32/3600 seconds...
+
+19:39:34.543000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 33/3600 seconds...
+
+19:39:35.611000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 34/3600 seconds...
+
+19:39:36.664000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 35/3600 seconds...
+
+19:39:38.531000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 36/3600 seconds...
+
+19:39:39.648000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 37/3600 seconds...
+
+19:39:40.678000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 38/3600 seconds...
+
+19:39:41.717000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 39/3600 seconds...
+
+19:39:43.568000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 40/3600 seconds...
+
+19:39:44.592000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 41/3600 seconds...
+
+19:39:45.631000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+	Current status: In Progress. Wait 42/3600 seconds...
+
+19:39:46.674000: 
+	GET: http://localhost:8080/api/v0/sessions/0/ixLoad/test/operations/runTest/0
+	HEADERS: {'content-type': 'application/json'}

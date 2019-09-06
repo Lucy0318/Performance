@@ -1,0 +1,1269 @@
+*** Settings ***
+Library           SSHLibrary
+
+*** Keywords ***
+tel
+    [Arguments]    ${command}    @{rest}
+    ${rtn}    Execute Command Ex    ${command}    @{rest}
+    ${Error}    evaluate    '''${rtn}'''.find('Error')
+    run keyword if    ${Error} != -1    FAIL    命令行执行失败！！
+    [Return]    ${rtn}
+
+ssh_execute_command
+    [Arguments]    ${command}    ${time}=1
+    [Documentation]    Telnet配置命令行 并返回回显.回显中如果有Error提示，返回执行失败。
+    SSHLibrary.read
+    SSHLibrary.write    ${command}
+    sleep    ${time}
+    ${rtn}=    SSHLibrary.Read Until Regexp    \#|--MORE--
+    ${More}=    check_if_contain    ${rtn}    --MORE--
+    run keyword if    ${More}== 1    SSHLibrary.Write Bare    q
+    ${Error}=    check_if_contain    ${rtn}    Error
+    run keyword if    ${Error} == 1    FAIL    命令行执行失败！！
+    [Return]    ${rtn}
+
+logout_by_https
+    Select Frame    id=logoFrame
+    sleep    3
+    Click Element    id=logoutLink
+
+login_by_https
+    [Arguments]    ${ip}    ${username}    ${password}    ${webbrowser}
+    Open Browser    https://${ip}    ${webbrowser}
+    sleep    5
+    Select Frame    id=authFrm
+    Comment    Current Frame Should Contain    ${username}
+    Comment    Current Frame Should Contain    ${password}
+    Clear Element Text    id=userName
+    Input Text    id=userName    admin
+    Clear Element Text    name=pwd
+    Input Password    name=pwd    password
+    ${value}    Get Value    name=pwd
+    log    ${value}
+    sleep    1
+    Click Button    name=Submit
+    sleep    5
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Page Should Contain    OK to preempt existing administrator?
+    run keyword if    '${result}' == 'PASS'    Click Button    name=Continue
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Page Should Contain    This appliance is not registered
+    run keyword if    '${result}' == 'PASS'    Click Element    id=regLaterButt
+    sleep    5
+
+login_by_https_ex
+    [Arguments]    ${ip}    ${username}    ${password}    ${webbrowser}
+    Open Browser    https://${ip}    ${webbrowser}
+    sleep    5
+    Select Frame    id=authFrm
+    Clear Element Text    id=userName
+    Input Text    id=userName    admin
+    Clear Element Text    name=pwd
+    Input Password    name=pwd    password
+    ${value}    Get Value    name=pwd
+    Click Button    name=Submit
+    sleep    10
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Page Should Contain    This appliance is not registered
+    run keyword if    '${result}' == 'PASS'    Click Element    id=regLaterButt
+    sleep    1
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Page Should Contain    OK to preempt existing administrator?
+    run keyword if    '${result}' == 'PASS'    Click Button    name=Continue
+    sleep    1
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Handle Alert    action=ACCEPT
+    sleep    1
+    Unselect Frame
+    sleep    1
+    Select Frame    id=authFrm
+    Clear Element Text    id=userName
+    Input Text    id=userName    admin
+    Clear Element Text    name=pwd
+    Input Password    name=pwd    password
+    ${value}    Get Value    name=pwd
+    Click Button    name=Submit
+    sleep    10
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Page Should Contain    This appliance is not registered
+    run keyword if    '${result}' == 'PASS'    Click Element    id=regLaterButt
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Page Should Contain    OK to preempt existing administrator?
+    run keyword if    '${result}' == 'PASS'    Click Button    name=Continue
+    sleep    5
+    sleep    1
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Handle Alert    action=ACCEPT
+    sleep    1
+
+restart_by_https
+    Select Frame    id=outlookFrame
+    Click Element    id=j1_14_anchor
+    sleep    5
+    Click Element    id=j1_26_anchor
+    sleep    5
+    Unselect Frame
+    Select Frame    id=tabFrame
+    Click Button    Xpath=//input[@class='snwl-btn']
+    Handle Alert    action=ACCEPT
+    sleep    5
+    Page Should Contain    Please wait, the appliance is restarting
+
+Register_VirtualFW_by_https
+    [Arguments]    ${email}    ${pwd}    ${sn}    ${code1}    ${code2}
+    Unselect Frame
+    Select Frame    id=logoFrame
+    Click Link    //*[@id='registerLink']
+    Unselect Frame
+    sleep    10
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Page Should Contain    MySonicWall username/email
+    : FOR    ${i}    IN RANGE    6
+    \    run keyword if    '${result}' == 'FAIL'    click registerLink
+    \    sleep    20
+    \    EXIT for loop if    '${result}' == 'PASS'
+    \    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Page Should Contain    MySonicWall username/email
+    Select Frame    id=tabFrame
+    Input Text    name=login    ${email}
+    sleep    3
+    Input Text    name=pwd    ${pwd}
+    sleep    3
+    Click Element    name=Submit
+    sleep    25
+    Page Should Contain    Serial Number
+    Unselect Frame
+    sleep    1
+    Select Frame    id=tabFrame
+    Input Text    name=serialNumber    ${sn}
+    sleep    3
+    Input Text    name=authcode1    ${code1}
+    sleep    3
+    Input Text    name=authcode2    ${code2}
+    sleep    3
+    Input Text    name=fname    Performace
+    sleep    3
+    Click Element    Xpath=//input[@class='snwl-btn snwl-btn-primary']
+    sleep    25
+    Capture Page Screenshot
+    Handle Alert    action=ACCEPT
+    sleep    10
+
+Enbale X0 SSH_Unregister
+    Select Frame    id=outlookFrame
+    sleep    5
+    Click Element    id=j1_15_anchor
+    sleep    5
+    Click Element    id=j1_16_anchor
+    sleep    5
+    Unselect Frame
+    Select Frame    id=tabFrame
+    Click Element    Xpath=//*[@href='editInterface_0.html']/img[@class='actionIcon']
+    sleep    5
+    Get Window Titles
+    Select Window    Edit Interface - X0
+    Select Checkbox    name=lan_iface_ssh_mgmt
+    sleep    5
+    Click Element    Xpath=//input[@class='snwl-btn snwl-btn-primary']
+    sleep    5
+
+Enbale X0 SSH_registered
+    Select Frame    id=outlookFrame
+    sleep    5
+    Click Element    id=j1_28_anchor
+    sleep    5
+    Click Element    id=j1_29_anchor
+    sleep    5
+    Unselect Frame
+    Select Frame    id=tabFrame
+    Click Element    Xpath=//*[@href='editInterface_0.html']/img[@class='actionIcon']
+    sleep    5
+    Get Window Titles
+    Select Window    Edit Interface - X0
+    get text    name=lan_iface_ssh_mgmt
+    sleep    5
+    Select Checkbox    name=lan_iface_ssh_mgmt
+    sleep    5
+    Click Element    Xpath=//input[@class='snwl-btn snwl-btn-primary']
+    sleep    5
+
+click registerLink
+    Unselect Frame
+    Select Frame    id=logoFrame
+    Click Link    //*[@id='registerLink']
+    Unselect Frame
+
+Enbale X0 SSH_https
+    select Frame    id=tabFrame
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    select Frame    id=servicesFrame
+    Comment    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Current Frame Contains    Your SonicWall is not registered.
+    Unselect Frame
+    Comment    Unselect Frame
+    run keyword if    '${result}' == 'PASS'    Enbale X0 SSH_Unregister
+    ...    ELSE    Enbale X0 SSH_registered
+
+switch to classic mode
+    Select Frame    name=toggleFrame
+    Click Element    id=toggleViewBtn
+    Unselect Frame
+
+login firewall
+    Write    admin
+    sleep    1
+    Read Until    Password:
+    Write    password
+    sleep    1
+    Set Prompt    >
+    Read Until Prompt
+
+login switch
+    Write    admin
+    sleep    1
+    Read Until    Password:
+    Write    password
+
+get_native_vlan
+    [Arguments]    ${result}    ${item}
+    ${result1}    ${pvid}    Should Match Regexp    ${result}    ${item}
+    [Return]    ${pvid}
+
+change_native_vlan
+    [Arguments]    ${port}    ${vlan1}    ${vlan2}
+    ssh_execute_command    interface vlan ${vlan1}
+    ssh_execute_command    no untag ${port}
+    ssh_execute_command    exit
+    ssh_execute_command    interface vlan ${vlan2}
+    ssh_execute_command    untag ${port}
+    ssh_execute_command    exit
+
+config_port_switchport
+    [Arguments]    ${port}
+    tel    interface ${port}
+    tel    switchport
+    tel    no shutdown
+    tel    exit
+
+config_native_vlan
+    [Arguments]    ${port}    ${vlan}
+    ssh_execute_command    interface vlan ${vlan}
+    ssh_execute_command    untag ${port}
+    ssh_execute_command    exit
+
+config_tag_port
+    [Arguments]    ${port}    ${vlan}
+    tel    interface vlan ${vlan}
+    tel    tag ${port}
+    tel    exit
+
+exit_to_>
+    : FOR    ${i}    INRANGE    9
+    \    sleep    1
+    \    write    \r
+    \    sleep    1
+    \    ${rtn}    read
+    \    ${a1}=    check_if_contain    ${rtn}    >
+    \    Run keyword if    ${a1} == 1    exit for loop
+    \    ...    ELSE    write    cancel
+
+SSH-login-firewall
+    [Arguments]    ${ip}    ${port}=22
+    [Documentation]    通过串口服务器登陆盒子串口，进入配置模式config(18B1698A2100)#
+    SSHLibrary.Open Connection    ${ip}    port= ${port}    timeout=5
+    SSHLibrary.Login    admin    password    delay=5
+    SSHLibrary.Write    configure terminal
+    sleep    3
+    ${rtn}=    SSHLibrary.read
+    ${a}=    check_if_contain    ${rtn}    [no]:
+    Run keyword if    ${a} == 1    SSHLibrary.Write    yes
+    sleep    1
+
+CLI-login-switch
+    [Arguments]    ${ip}    ${port}
+    [Documentation]    通过串口服务器登陆盒子串口，进入配置模式config(18B1698A2100)#
+    Open Connection    ${ip}    port=${port}
+    ssh_execute_commandnet.Login    root    123456
+    write    \r
+    sleep    5
+    ${rtn}    read
+    log    ${rtn}
+    ${a}    check_if_contain    ${rtn}    Perf-S3148-1>
+    Run keyword if    ${a} == 1    write    enable
+    sleep    5
+    write    end
+    sleep    1
+    read
+    Set Prompt    \#
+    write    configure terminal
+    Read Until Prompt
+
+telnet-login-switch
+    [Arguments]    ${ip}
+    [Documentation]    通过串口服务器登陆盒子串口，进入配置模式config(18B1698A2100)#
+    Telnet.Open Connection    ${ip}    port=23
+    Telnet.Login    admin    password    login_prompt=Login:
+    Set Prompt    \#
+    Telnet.write    configure terminal
+    Telnet.Read Until Prompt
+
+SSH-config_wan_ip
+    [Arguments]    ${port}    ${ip}    ${mask}    ${gateway}
+    [Documentation]    配置wan侧的ip地址，网关，使盒子可以网页访问
+    ssh_execute_command    interface ${port}
+    ssh_execute_command    ip-assignment WAN static
+    ssh_execute_command    ip ${ip} netmask ${mask}
+    ssh_execute_command    gateway ${gateway}
+    ssh_execute_command    dns primary 10.50.129.148
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+    ssh_execute_command    management https
+    ssh_execute_command    management ping
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+
+SSH-Factory-Restore
+    [Arguments]    ${sleep_time}
+    [Documentation]    恢复出厂配置
+    SSHLibrary.Write    restore-defaults
+    sleep    1
+    SSHLibrary.Read Until    [cancel]:
+    sleep    1
+    SSHLibrary.Write    yes
+    sleep    ${sleep_time}
+
+SSH-config-Test-LAN
+    [Arguments]    ${port}    ${ip}    ${mask}
+    ssh_execute_command    interface ${port}
+    ssh_execute_command    ip-assignment LAN static
+    ssh_execute_command    ip ${ip} netmask ${mask}
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+    ssh_execute_command    management ping
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+
+SSH-config-Test-WAN
+    [Arguments]    ${port}    ${ip}    ${mask}
+    ssh_execute_command    interface ${port}
+    ssh_execute_command    ip-assignment WAN static
+    ssh_execute_command    ip ${ip} netmask ${mask}
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+    ssh_execute_command    management ping
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+
+SSH-WAN-to-LAN Allow
+    ssh_execute_command    no access-rule from WAN to LAN action deny
+    ssh_execute_command    commit
+    sleep    1
+    ssh_execute_command    access-rule from WAN to LAN action allow
+    ssh_execute_command    commit
+    sleep    1
+    ssh_execute_command    exit
+
+CLI-logout
+    write    exit
+    sleep    1
+    write    exit
+    sleep    1
+
+choose group id
+    [Arguments]    ${list}
+    log to console    Group id is being used ,should change another one!!
+    : FOR    ${index}    IN RANGE    1    13
+    \    ${i}    evaluate    '${index}' in ${list}
+    \    ${i}    evaluate    not ${i}
+    \    Exit For Loop If    ${i}
+    Set Suite Variable    ${group}    ${index}
+
+check test status
+    [Arguments]    ${run_id1}
+    ${progress}=    Set Variable    0
+    : FOR    ${index}    IN RANGE    100
+    \    ${progress}    getRTS    ${run_id1}
+    \    Exit For Loop If    ${progress} ==100
+    \    Sleep    10
+    Run Keyword IF    ${progress} ==100    Log To Console    Test Finished!
+    ...    ELSE    FAIL    Execution timeout！！
+
+BpFileChangeFramelSize_2ports
+    [Arguments]    ${length}
+    viewNormalTest    enableRequestPrints=true
+    modifyNormalTest2    componentId=routingrobot_10G_1    elementId=sizeDist    paramId=min    Value=${length}
+    modifyNormalTest2    componentId=routingrobot_10G_1    elementId=sizeDist    paramId=max    Value=${length}
+    sleep    1
+    modifyNormalTest2    componentId=routingrobot_10G_1    elementId=duration    paramId=durationTime    Value=00:10:00
+    Comment    modifyNormalTest2    componentId=routingrobot_10G_1    elementId=duration    paramId=durationFrames    Value=0
+
+BpFileChangeFramelSize_4ports
+    [Arguments]    ${length}
+    viewNormalTest    enableRequestPrints=true
+    modifyNormalTest2    componentId=routingrobot_10G_1    elementId=sizeDist    paramId=min    Value=${length}
+    modifyNormalTest2    componentId=routingrobot_10G_1    elementId=sizeDist    paramId=max    Value=${length}
+    modifyNormalTest2    componentId=routingrobot_10G_1    elementId=duration    paramId=durationTime    Value=00:10:00
+    Comment    modifyNormalTest2    componentId=routingrobot_10G_1    elementId=duration    paramId=durationFrames    Value=0
+    sleep    5
+    modifyNormalTest2    componentId=routingrobot_10G_2    elementId=sizeDist    paramId=min    Value=${length}
+    modifyNormalTest2    componentId=routingrobot_10G_2    elementId=sizeDist    paramId=max    Value=${length}
+    modifyNormalTest2    componentId=routingrobot_10G_2    elementId=duration    paramId=durationTime    Value=00:10:00
+    Comment    modifyNormalTest2    componentId=routingrobot_10G_2    elementId=duration    paramId=durationFrames    Value=0
+
+download firewall version and reboot with factory-default
+    [Arguments]    ${username}    ${password}    ${ip}    ${file}    ${time}
+    SSHLibrary.Write    import firmware ftp ftp://${username}:${password}@${ip}/${file}
+    sleep    20
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    SSHLibrary.Read Until    uploaded successfully
+    : FOR    ${i}    IN RANGE    10
+    \    run keyword if    '${result}' == 'FAIL'    sleep    20
+    \    EXIT for loop if    '${result}' == 'PASS'
+    \    ${result}    ${returnvalue}    Run Keyword And Ignore Error    SSHLibrary.Read Until    uploaded successfully
+    run keyword if    '${result}' == 'FAIL'    FAIL    download version fail ,timeout!!
+    SSHLibrary.Write    boot uploaded factory-default
+    sleep    1
+    SSHLibrary.Read Until    [cancel]:
+    sleep    1
+    SSHLibrary.Write    yes
+    sleep    ${time}
+
+boot current factory-default
+    [Arguments]    ${time}
+    Set Client Configuration    prompt=[cancel]:
+    sleep    1
+    write    boot current factory-default
+    sleep    1
+    Read Until Prompt
+    Write    yes
+    sleep    ${time}
+    log to console    same version ,no need download !
+
+BP_ReservePorts
+    [Arguments]    ${slot}    ${group}    @{ports}
+    : FOR    ${index}    IN    @{ports}
+    \    @{list}    create list    ${index}
+    \    ReservePorts    slot=${slot}    portList=@{list}    group=${group}    force=true
+    \    sleep    10
+
+config_failover-lb_interface
+    [Arguments]    ${interface}
+    ssh_execute_command    failover-lb
+    ssh_execute_command    group " Default LB Group"
+    ssh_execute_command    interface ${interface}
+    ssh_execute_command    rank 1
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+    ssh_execute_command    no interface X1
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+    ssh_execute_command    end
+
+SSH-MAX-DPI-Connections
+    [Arguments]    ${time}
+    [Documentation]    Switch to Max DPI Connections from Console
+    ssh_execute_command    firewall
+    ssh_execute_command    connections optimized
+    SSHLibrary.Write    commit
+    sleep    1
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    SSHLibrary.Read Until    [cancel]:
+    run keyword if    '${result}' == 'PASS'    write yes and sleep    ${time}
+
+SSH-MAX-SPI-Connections
+    [Arguments]    ${time}
+    [Documentation]    Switch to Max DPI Connections from Console
+    ssh_execute_command    firewall
+    ssh_execute_command    connections highest
+    SSHLibrary.Write    commit
+    sleep    1
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    SSHLibrary.Read Until    [cancel]:
+    run keyword if    '${result}' == 'PASS'    write yes and sleep    ${time}
+
+write yes and sleep
+    [Arguments]    ${time}
+    Run Keyword And Ignore Error    SSHLibrary.Write    yes
+    sleep    ${time}
+
+SSH-security maximum
+    ssh_execute_command    security-services
+    ssh_execute_command    security maximum
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+
+SSH-Performance Optimized
+    ssh_execute_command    security-services
+    ssh_execute_command    security performance-optimized
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+
+SSH-Enable-IPS
+    ssh_execute_command    intrusion-prevention
+    ssh_execute_command    enable
+    ssh_execute_command    signature-group high-priority detect-all
+    ssh_execute_command    signature-group high-priority prevent-all
+    ssh_execute_command    signature-group medium-priority detect-all
+    ssh_execute_command    signature-group medium-priority prevent-all
+    ssh_execute_command    signature-group low-priority detect-all
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+
+SSH-Disable-IPS
+    ssh_execute_command    intrusion-prevention
+    ssh_execute_command    no enable
+    ssh_execute_command    no signature-group high-priority detect-all
+    ssh_execute_command    no signature-group high-priority prevent-all
+    ssh_execute_command    no signature-group medium-priority detect-all
+    ssh_execute_command    no signature-group medium-priority prevent-all
+    ssh_execute_command    no signature-group low-priority detect-all
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+
+SSH-Enable-GAV
+    ssh_execute_command    gateway-antivirus
+    ssh_execute_command    enable
+    ssh_execute_command    inbound-inspection http
+    ssh_execute_command    outbound-inspection http
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+
+SSH-Disable-GAV
+    ssh_execute_command    gateway-antivirus
+    ssh_execute_command    no enable
+    ssh_execute_command    no inbound-inspection http
+    ssh_execute_command    no outbound-inspection http
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+
+SSH-Enable-AntiSpyware
+    ssh_execute_command    anti-spyware
+    ssh_execute_command    enable
+    ssh_execute_command    signature-group high-danger detect-all
+    ssh_execute_command    signature-group high-danger prevent-all
+    ssh_execute_command    signature-group medium-danger detect-all
+    ssh_execute_command    signature-group medium-danger prevent-all
+    ssh_execute_command    signature-group low-danger detect-all
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+
+SSH-Disable-AntiSpyware
+    ssh_execute_command    anti-spyware
+    ssh_execute_command    no enable
+    ssh_execute_command    no signature-group high-danger detect-all
+    ssh_execute_command    no signature-group high-danger prevent-all
+    ssh_execute_command    no signature-group medium-danger detect-all
+    ssh_execute_command    no signature-group medium-danger prevent-all
+    ssh_execute_command    no signature-group low-danger detect-all
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+
+Get bp-to-switchportslist
+    [Arguments]    ${slot}    ${port}    @{excel}
+    : FOR    ${i}    IN    @{excel}
+    \    ${bpslot}    evaluate    int(${i["SLOT"]})
+    \    ${bpport}    evaluate    int(${i["PORT"]})
+    \    ${ports}    set variable if    ${bpslot} == ${slot} and ${bpport} == ${port}    ${i["SWITCH_PORT"]}
+    \    exit for loop if    ${bpslot} == ${slot} and ${bpport} == ${port}
+    [Return]    ${ports}
+
+clear port vlan configiration
+    [Arguments]    @{PorLists}
+    tel    interface range vlan 2 - 4092
+    : FOR    ${port}    IN    @{PorLists}
+    \    Telnet.write    no tagged ${port}
+    \    sleep    10
+    \    Telnet.write    no untagged ${port}
+    \    sleep    10
+    Telnet.write    exit
+    sleep    5
+    Telnet.read
+
+Get_License
+    [Arguments]    ${equipment_type}
+    @{sn}=    read xls file    Virtual_topology.xlsx    License
+    : FOR    ${i}    IN    @{sn}
+    \    ${rtn}=    check if contain    ${i["model"]}    ${equipment_type}
+    \    ${sn}    set variable if    ${rtn} == 1    ${i["sn"]}
+    \    ${code1}    set variable if    ${rtn} == 1    ${i["code1"]}
+    \    ${code2}    set variable if    ${rtn} == 1    ${i["code2"]}
+    \    Exit For Loop If    ${rtn} == 1
+    [Return]    ${sn}    ${code1}    ${code2}
+
+deregister
+    login_by_https_ex    192.168.168.168    admin    password    firefox
+    sleep    5
+    switch to classic mode
+    sleep    5
+    Select Frame    id=outlookFrame
+    sleep    5
+    Click Element    id=j1_14_anchor
+    sleep    5
+    Click Element    id=j1_16_anchor
+    sleep    5
+    Unselect Frame
+    Select Frame    id=tabFrame
+    Click Element    name=deregisterButton
+    sleep    25
+    Handle Alert    action=ACCEPT
+    sleep    25
+    Handle Alert    action=ACCEPT
+    sleep    10
+    [Teardown]    Close Browser
+
+soniccore_register
+    [Arguments]    ${sn}    ${code1}    ${code2}
+    login_by_https_ex    192.168.168.168    admin    password    firefox
+    sleep    10
+    Register_VirtualFW_by_https    shsystem@163.com    sonicwall    ${sn}    ${code1}    ${code2}
+    [Teardown]    Close Browser
+
+SSH-Enable-APP-Control
+    ssh_execute_command    app-control
+    ssh_execute_command    enable
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+
+SSH-Disable-APP-Control
+    ssh_execute_command    app-control
+    ssh_execute_command    no enable
+    ssh_execute_command    commit
+    ssh_execute_command    exit
+
+BpFileModify_IMIX_4ports
+    viewNormalTest    enableRequestPrints=true
+    @{list}    set variable    1    2    3
+    : FOR    ${len}    ${wei}    ${i}    IN ZIP    ${IMIX_frameSize}    ${IMIX_weight}
+    ...    ${list}
+    \    modifyNormalTest2    componentId=routingrobot_10G_1    elementId=sizeDist    paramId=mixlen${i}    Value=${len}
+    \    modifyNormalTest2    componentId=routingrobot_10G_1    elementId=sizeDist    paramId=mixweight${i}    Value=${wei}
+    \    sleep    5
+    \    modifyNormalTest2    componentId=routingrobot_1    elementId=sizeDist    paramId=mixlen${i}    Value=${len}
+    \    modifyNormalTest2    componentId=routingrobot_1    elementId=sizeDist    paramId=mixweight${i}    Value=${wei}
+    \    sleep    1
+    modifyNormalTest2    componentId=routingrobot_10G_1    elementId=duration    paramId=durationTime    Value=00:05:00
+    Comment    modifyNormalTest2    componentId=routingrobot_10G_1    elementId=duration    paramId=durationFrames    Value=0
+    sleep    1
+    modifyNormalTest2    componentId=routingrobot_1    elementId=duration    paramId=durationTime    Value=00:05:00
+    Comment    modifyNormalTest2    componentId=routingrobot_1    elementId=duration    paramId=durationFrames    Value=0
+    sleep    1
+
+Gui_deregister
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    deregister
+    sleep    1
+    : FOR    ${i}    IN RANGE    3
+    \    unSelect Frame
+    \    sleep    5
+    \    EXIT for loop if    '${result}' == 'PASS'
+    \    ${result}    ${returnvalue}    Run Keyword And Ignore Error    deregister
+    Run Keyword IF    '${result}' == 'FAIL'    FAIL    Firewall deregister failed!!
+    ...    ELSE    sleep    200
+    [Teardown]    Close All Browsers
+
+HTTP_UTM_OFF_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    ###config SPI enable####
+    SSH-login-firewall    192.168.168.168
+    SSH-MAX-SPI-Connections    200
+    SSHLibrary.Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with UTM_OFF
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    setNormalTest    NN_name=VMWare_HTTP_Throughput
+    viewNormalTest    enableRequestPrints=true
+    sleep    5
+    ${run_id}    RunTest    modelname=VMWare_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    Run BP configuration file failed!!
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_UTM_OFF_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    0    ${throughout}
+    log to console    UTM_OFF_Test finish!
+
+HTTP_IPS_Max_Security_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    ###config IPS_Max_Security####
+    SSH-login-firewall    192.168.168.168
+    SSH-MAX-DPI-Connections    200
+    SSHLibrary.Close Connection
+    SSH-login-firewall    192.168.168.168
+    SSH-security maximum
+    SSH-Enable-IPS
+    SSHLibrary.Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with IPS_Max
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${run_id}    RunTest    modelname=VMWare_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    Run BP configuration file failed!!
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_IPS_Max_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    1    ${throughout}
+    log to console    IPS_Max_Security_Test finish!
+    ###IPS disable###
+    SSH-login-firewall    192.168.168.168
+    SSH-Disable-IPS
+    SSHLibrary.Close Connection
+
+HTTP_IPS_Perf_Optimized_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    ###config IPS_Max_Security####
+    SSH-login-firewall    192.168.168.168
+    SSH-MAX-DPI-Connections    200
+    SSHLibrary.Close Connection
+    SSH-login-firewall    192.168.168.168
+    SSH-Performance Optimized
+    SSH-Enable-IPS
+    SSHLibrary.Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with IPS_Perf_Optimized
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${run_id}    RunTest    modelname=VMWare_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    Run BP configuration file failed!!
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_IPS_Perf_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    2    ${throughout}
+    log to console    IPS_Perf_Optimized_Test finish!
+    ###IPS disable###
+    SSH-login-firewall    192.168.168.168
+    SSH-Disable-IPS
+    SSHLibrary.Close Connection
+
+HTTP_GAV_Max_Security_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    ###config IPS_Max_Security####
+    SSH-login-firewall    192.168.168.168
+    SSH-MAX-DPI-Connections    200
+    SSHLibrary.Close Connection
+    SSH-login-firewall    192.168.168.168
+    SSH-security maximum
+    SSH-Enable-GAV
+    SSHLibrary.Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with GAV_Max_Security
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${run_id}    RunTest    modelname=VMWare_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    Run BP configuration file failed!!
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_GAV_Max_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    3    ${throughout}
+    log to console    GAV_Max_Security_Test finish!
+    ###GAV disable###
+    SSH-login-firewall    192.168.168.168
+    SSH-Disable-GAV
+    SSHLibrary.Close Connection
+
+HTTP_GAV_Perf_Optimized_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    ###config IPS_Max_Security####
+    SSH-login-firewall    192.168.168.168
+    SSH-MAX-DPI-Connections    200
+    SSHLibrary.Close Connection
+    SSH-login-firewall    192.168.168.168
+    SSH-Performance Optimized
+    SSH-Enable-GAV
+    SSHLibrary.Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with GAV_Perf_Optimized
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${run_id}    RunTest    modelname=VMWare_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    Run BP configuration file failed!!
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_GAV_Perf_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    4    ${throughout}
+    log to console    GAV_Perf_Optimized_Test finish!
+    ###GAV disable###
+    SSH-login-firewall    192.168.168.168
+    SSH-Disable-GAV
+    SSHLibrary.Close Connection
+
+HTTP_Anti_Spy_MaxSec_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    ###config IPS_Max_Security####
+    SSH-login-firewall    192.168.168.168
+    SSH-MAX-DPI-Connections    200
+    SSHLibrary.Close Connection
+    SSH-login-firewall    192.168.168.168
+    SSH-security maximum
+    SSH-Enable-AntiSpyware
+    SSHLibrary.Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with Anti_Spy_MaxSec
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${run_id}    RunTest    modelname=VMWare_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    Run BP configuration file failed!!
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_Anti_Spy_max_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    5    ${throughout}
+    log to console    Anti_Spy_MaxSec_Test finish!
+    ###GAV disable###
+    SSH-login-firewall    192.168.168.168
+    SSH-Disable-AntiSpyware
+    SSHLibrary.Close Connection
+
+HTTP_Anti_Spy_PerfOpt_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    ###config IPS_Max_Security####
+    SSH-login-firewall    192.168.168.168
+    SSH-MAX-DPI-Connections    200
+    SSHLibrary.Close Connection
+    SSH-login-firewall    192.168.168.168
+    SSH-Performance Optimized
+    SSH-Enable-AntiSpyware
+    SSHLibrary.Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with Anti_Spy_PerfOpt
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${run_id}    RunTest    modelname=VMWare_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    Run BP configuration file failed!!
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_Anti_Spy_Perf_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    6    ${throughout}
+    log to console    Anti_Spy_PerfOpt_Test finish!
+    ###GAV disable###
+    SSH-login-firewall    192.168.168.168
+    SSH-Disable-AntiSpyware
+    SSHLibrary.Close Connection
+
+HTTP_All_Max_Security_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    ###config IPS_Max_Security####
+    SSH-login-firewall    192.168.168.168
+    SSH-MAX-DPI-Connections    200
+    SSHLibrary.Close Connection
+    SSH-login-firewall    192.168.168.168
+    SSH-security maximum
+    SSH-Enable-IPS
+    SSH-Enable-GAV
+    SSH-Enable-AntiSpyware
+    SSHLibrary.Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with All_Max_Security
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${run_id}    RunTest    modelname=VMWare_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    Run BP configuration file failed!!
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_All_Max_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    7    ${throughout}
+    log to console    All_Max_Security_Test finish!
+    ###GAV disable###
+    SSH-login-firewall    192.168.168.168
+    SSH-Disable-IPS
+    SSH-Disable-GAV
+    SSH-Disable-AntiSpyware
+    SSHLibrary.Close Connection
+
+HTTP_All_ Perf_Optimized_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    ###config IPS_Max_Security####
+    SSH-login-firewall    192.168.168.168
+    SSH-MAX-DPI-Connections    200
+    SSHLibrary.Close Connection
+    SSH-Performance Optimized
+    SSH-Enable-IPS
+    SSH-Enable-GAV
+    SSH-Enable-AntiSpyware
+    SSHLibrary.Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with All_ Perf_Optimized
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${run_id}    RunTest    modelname=VMWare_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    Run BP configuration file failed!!
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_All_ Perf_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    8    ${throughout}
+    log to console    All_ Perf_Optimized finish!
+    ###GAV disable###
+    SSH-login-firewall    192.168.168.168
+    SSH-Disable-IPS
+    SSH-Disable-GAV
+    SSH-Disable-AntiSpyware
+    SSHLibrary.Close Connection
+
+HTTP_APP_Control_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    ###config IPS_Max_Security####
+    SSH-login-firewall    192.168.168.168
+    SSH-MAX-DPI-Connections    200
+    SSHLibrary.Close Connection
+    SSH-login-firewall    192.168.168.168
+    SSH-Enable-APP-Control
+    SSHLibrary.Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with APP Control Enabled
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${run_id}    RunTest    modelname=VMWare_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    Run BP configuration file failed!!
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_APP_Control_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    9    ${throughout}
+    log to console    APP_Control_Test finish!
+    ###IPS disable###
+    SSH-login-firewall    192.168.168.168
+    SSH-Disable-APP-Control
+    SSHLibrary.Close Connection
+
+HTTP_GAV_GAS_Control_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    ###config IPS_Max_Security####
+    SSH-login-firewall    192.168.168.168
+    SSH-MAX-DPI-Connections    200
+    SSHLibrary.Close Connection
+    SSH-login-firewall    192.168.168.168
+    SSH-security maximum
+    SSH-Enable-GAV
+    SSH-Enable-AntiSpyware
+    SSHLibrary.Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with GAV&GAS Control Enabled
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${run_id}    RunTest    modelname=VMWare_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    Run BP configuration file failed!!
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_GAV&GAS_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    10    ${throughout}
+    log to console    GAV&GAS_Control_Test finish!
+    ###IPS disable###
+    SSH-login-firewall    192.168.168.168
+    SSH-Disable-GAV
+    SSH-Disable-AntiSpyware
+    SSHLibrary.Close Connection
+
+TcpRate_UTM_OFF_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    ###config SPI enable####
+    SSH-login-firewall    192.168.168.168
+    SSH-MAX-SPI-Connections    200
+    SSHLibrary.Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test tcp ratefor ${type} with UTM_OFF
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    setNormalTest    NN_name=VMWare_TCP_Rate_${type}
+    viewNormalTest    enableRequestPrints=true
+    sleep    5
+    ${run_id}    RunTest    modelname=VMWare_TCP_Rate_${type}    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    Run BP configuration file failed!!
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_UTM_OFF_${time1}
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${tcprate}    Get TCPRateResult 4ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    0    ${tcprate}
+    log to console    UTM_OFF_Test finish!
+
+TcpRate_All_Max_Security_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    Virtual_topology.xlsx    topology
+    ###config IPS_Max_Security####
+    SSH-login-firewall    192.168.168.168
+    SSH-MAX-DPI-Connections    200
+    SSHLibrary.Close Connection
+    SSH-login-firewall    192.168.168.168
+    SSH-security maximum
+    SSH-Enable-IPS
+    SSH-Enable-GAV
+    SSH-Enable-AntiSpyware
+    SSHLibrary.Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test Tcp Rate for ${type} with All_Max_Security
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${run_id}    RunTest    modelname=VMWare_TCP_Rate_${type}    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    Run BP configuration file failed!!
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_All_Max_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${tcprate}    Get TCPRateResult 4ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    1    ${tcprate}
+    log to console    All_Max_Security_Test finish!
+    ###GAV disable###
+    SSH-login-firewall    192.168.168.168
+    SSH-Disable-IPS
+    SSH-Disable-GAV
+    SSH-Disable-AntiSpyware
+    SSHLibrary.Close Connection

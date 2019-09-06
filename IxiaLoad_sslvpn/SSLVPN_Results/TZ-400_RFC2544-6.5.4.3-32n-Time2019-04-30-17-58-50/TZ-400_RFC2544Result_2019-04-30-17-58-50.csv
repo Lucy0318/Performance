@@ -1,0 +1,2 @@
+FrameSize(Byte),Throughput(Mbps),MinLatency(us),FrameRate(kfps)
+1240,136.424,531960.000,13752.411

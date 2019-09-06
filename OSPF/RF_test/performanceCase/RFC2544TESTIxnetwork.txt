@@ -1,0 +1,276 @@
+*** Settings ***
+Library           Telnet
+Library           DateTime
+Library           breakingpoint    10.7.1.234    admin    admin
+Library           Collections
+Resource          ../keyword/keyword.txt
+Library           BuiltIn
+Library           Collections
+Library           IxNetRestApi.Connect    ${apiServerIp}    ${apiServerPort}    ${apiServerOs}    robotFrameworkStdout=True    WITH NAME    ixnObj
+...               # Must add the ../../Modules path to PYTHONPATH.
+Library           IxNetRestApiPortMgmt.PortMgmt    WITH NAME    portMgmtObj
+Library           IxNetRestApiFileMgmt.FileMgmt    WITH NAME    fileMgmtObj
+Library           IxNetRestApiTraffic.Traffic    WITH NAME    trafficObj
+Library           IxNetRestApiProtocol.Protocol    WITH NAME    protocolObj
+Library           IxNetRestApiStatistics.Statistics    WITH NAME    statisticObj
+Library           IxNetRestApiQuickTest.QuickTest    WITH NAME    quickTestObj
+Library           Selenium2Library
+Library           Sonicwall
+
+*** Variables ***
+@{equipment_type}    9450    # 待测试设备类型，如：3650，3600，3600, 9200，9600等。列表形式，顺序执行
+${slot}           4    # bp端口槽位号
+@{portList}       ${port_1_1}    ${port_2_1}    # 使用的bp端口${port_1_1}${port_2_1}${port_3_1}${port_4_1}
+${group}          2    # 使用bp端口的group id，范围1-12
+@{frameSize}      1518    # 测试包长
+${location}       C:\\RFC2544Result    # 测试报告保存地址，注意是斜杠方向”/"
+${ftp_username}    admin    # ftp 用户名
+${ftp_password}    admin    # ftp密码
+${ftpServer_ip}    10.7.3.245    # ftp服务器ip
+${version}        6.5.2.0-24n    # 待测试版本号,格式如：6.5.1.0-32n，6.5.2.0-12n。。ftp服务器上需要设置\\10.190.202.40\FIRMWARE\NG 为ftp下载根目录.
+${apiServerIp}    localhost
+${apiServerPort}    11009
+${apiServerOs}    windows
+${forceTakePortOwnership}    True
+${releasePortsWhenDone}    False
+${deleteSessionAfterTest}    True
+${licenseServerIp}    192.168.70.3
+${licenseModel}    subscription
+${licenseTier}    tier3
+${ixChassisIp}    10.7.1.234
+@{port_1_1}       ${ixChassisIp}    4    13
+@{port_2_1}       ${ixChassisIp}    4    14
+@{port_3_1}       ${ixChassisIp}    4    15
+@{port_4_1}       ${ixChassisIp}    4    16
+${location1}      C:\\RF_OSPF\\OSPF_Results
+@{Email_receiver}    fxia@sonicwall.com
+@{portList1}      13    14    15    16    # 1,2,11,12
+${jsonConfigFilePath}    C:/OSPF/    # C:/9400RF2544Test.json
+
+*** Test Cases ***
+RunCase
+    [Tags]    performance
+    [Template]    RFC2544TestCase
+    : FOR    ${item}    IN    @{equipment_type}
+    \    ${item}
+
+*** Keywords ***
+config switch
+    [Arguments]    ${type}
+    ###获取bp在交换机上对应的端口列表###
+    @{data1}=    read xls file    topology.xlsx    BP-TO-SWITCH
+    @{SwitchPorList}    create list
+    : FOR    ${i}    IN    @{portList1}
+    \    ${i}    evaluate    int(${i})
+    \    ${ports}    Get bp-to-switchportslist    ${slot}    ${i}    @{data1}
+    \    append to list    ${SwitchPorList}    ${ports}
+    Log Many    @{SwitchPorList}
+    log to console    config S6000 switch
+    ###配置Port###
+    @{data}=    read xls file    topology.xlsx    ${type}
+    Comment    Telnet-login-switch    ${data[0]["SWITCH_IP"]}
+    log to console    config untag ports
+    ${port-channel}    set variable    port-channel 1
+    : FOR    ${i}    IN    @{data}
+    \    Telnet-login-switch    ${data[0]["SWITCH_IP"]}
+    \    config_port_switchport    ${i["UNTAG"]}
+    \    ${vlan}    evaluate    int(${i["VLAN"]})
+    \    write    no interface vlan ${vlan}
+    \    Read Until Prompt
+    \    ${result}    tel    do show interfaces switchport ${i["UNTAG"]}
+    \    ${nativlan_id}    get_native_vlan    ${result}    U\\s+(\\d+)
+    \    run keyword if    ${nativlan_id} == ${vlan}    log    the port has already configed
+    \    ...    ELSE IF    ${nativlan_id} == 1    config_native_vlan    ${i["UNTAG"]}    ${vlan}
+    \    ...    ELSE    change_native_vlan    ${i["UNTAG"]}    ${nativlan_id}    ${vlan}
+    \    config_tag_port    ${port-channel}    ${vlan}
+    \    Telnet.Close Connection
+    \    config_S6000-2    ${SwitchPorList}    ${vlan}    ${port-channel}
+    log to console    finish config switch!
+    Telnet.Close Connection
+
+download version
+    [Arguments]    ${type}
+    ###串口登陆，ftp下载版本###
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    log to console    start download version for ${type}
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-config_wan_ip    X1    ${data[0]["HOST_IP"]}    ${data[0]["NETMASK"]}    ${data[0]["GATEWAY"]}
+    ${result}=    tel    show version
+    ###ping gateway check####
+    Write    ping ${data[0]["GATEWAY"]}
+    sleep    5
+    Read Until    is alive
+    sleep    1
+    ###download###
+    ${filename}=    Get Match Filename    ${version}    ${type}
+    Comment    ${path}    evaluate    '${version_path}'.split('/')[-1]
+    ${value}=    evaluate    '''${result}'''.find('${version}')
+    run key word if    ${value} == -1    download firewall version and reboot with factory-default    ${ftp_username}    ${ftp_password}    ${ftpServer_ip}    ${filename}
+    ...    240
+    ...    ELSE    boot current factory-default    240
+    log to console    finish download version for ${type}
+    Close Connection
+    [Teardown]
+
+config firewall
+    [Arguments]    ${type}
+    ###获取盒子相关数据##
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    ###串口下完成测试相关配置####
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    : FOR    ${i}    IN    @{data}
+    \    run key word if    '${i["LAN PORT"]}' != ''    CLI-config-Test-LAN    ${i["LAN PORT"]}    ${i["LAN IP"]}    ${i["LAN MASK"]}
+    \    run key word if    '${i["WAN PORT"]}' != ''    CLI-config-Test-WAN    ${i["WAN PORT"]}    ${i["WAN IP"]}    ${i["WAN MASK"]}
+    sleep    1
+    Comment    CLI-WAN-to-LAN Allow
+    ###ping gateway check####
+    CLI-config_wan_ip    X1    ${data[0]["HOST_IP"]}    ${data[0]["NETMASK"]}    ${data[0]["GATEWAY"]}
+    Close Connection
+    sleep    60
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    Write    ping ${data[0]["GATEWAY"]}
+    sleep    5
+    Read Until    is alive
+    ###config SPI enable####
+    CLI-MAX-SPI-Connections    240
+    Close Connection
+    LOG TO CONSOLE    Finish firewall config!
+    [Teardown]
+
+Ixnettest
+    [Arguments]    ${type}
+    # Extending the main ${ixnObj} object to all the instantiated classes
+    ${ixnObj} =    ixnObj.getSelfObject
+    portMgmtObj.setMainObject    ${ixnObj}
+    fileMgmtObj.setMainObject    ${ixnObj}
+    protocolObj.setMainObject    ${ixnObj}
+    quickTestObj.setMainObject    ${ixnObj}
+    Log To Console    Connecting to chassis ...
+    ###生成一个文件夹以及csv文件保存测试结果####
+    ${tm}    get_current_date
+    ${time}    evaluate    '${tm}'.replace(' ','-')
+    ${time}    evaluate    '${time}'.replace(':','-')
+    ${time}    evaluate    '${time}'.split('.')[0]
+    ${csv_name}    set Variable    ${type}_RFC2544Result_${time}
+    ${path}    evaluate    '${type}'+'_RFC2544'+'-'+'${version}'+'-Time'+'${time}'
+    ${location2}    evaluate    '${location1}'+'/'+'${path}'
+    Create Folder    ${location2}
+    Create RFC2544 ReportFile    ${location2}    ${csv_name}.csv
+    ${location4}    getcurrdir    ${location2}
+    Log    ${location4}
+    portMgmtObj.Connect Ix Chassis    ${ixChassisIp}
+    # Verify if ports are available. Take over if forceTakePortOwnership == True
+    ${result} =    portMgmtObj.Are Ports Available    portList=${portList}    raiseException=${False}
+    Run Keyword If    ("${result}"!=0) and ("${forceTakePortOwnership}"=="True")    Run Keywords    portMgmtObj.Release Ports    ${portList}
+    ...    AND    portMgmtObj.Clear Port Ownership    ${portList}
+    ...    ELSE    Fail    Ports are still owned
+    ###从服务器上传配置文件到bp####
+    Comment    ${jsonData} =    fileMgmtObj.Json Read Config    ${jsonConfigFile}
+    ###遍历各个字节，测试2544吞吐量###
+    : FOR    ${len}    IN    @{frameSize}
+    \    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    \    log to console    Loading JSON config file to API server
+    \    ${newConfig}    Evaluate    str('newConfig')
+    \    fileMgmtObj.Import Json Config File    //10.190.202.40/Shanghai QA/SystemTest/Perf2/Ixnetwork/${type}RFC2544test.json    option=${newConfig}
+    \    Log To Console    Assigning ports
+    \    ${handles}=    getAllQuickTestHandles
+    \    log    ${handles}
+    \    ${names}=    getAllQuickTestNames
+    \    ${handel}=    getQuickTestHandleByName    RFC2544_X16-X17-X18-X19
+    \    LOG    ${handel}
+    \    Start Quick Test    ${handel}
+    \    sleep    10
+    \    ForIxnetwork    ${handel}
+    \    ${testResult}=    getQuickTestCurrentAction    ${handel}
+    \    Run Keyword IF    '${testResult}' == 'TestEnded'    Log To Console    Test Finished!
+    \    ...    ELSE    FAIL    Test Failed!
+    \    ${resultPath}=    getQuickTestResultPath    ${handel}
+    \    ${resultAgg}=    getQuickTestCsvFiles    ${handel}    ${location4}    AggregateResults.csv
+    \    LOG    ${handel}
+    \    sleep    5
+    \    LOG    ${resultAgg}
+    \    portMgmtObj.Release Ports    ${portList}
+    \    portMgmtObj.Clear Port Ownership    ${portList}
+    \    sleep    10
+    \    csv to xlsx    ${location4}    AggregateResults
+    \    @{list}    get_IxnetworkResult    ${location4}    AggregateResults.xlsx    1518
+    \    Write To CsvFile    ${location4}    ${csv_name}    ${list[0]}    ${list[1]}    ${list[2]}
+    \    ...    ${list[3]}
+    \    log to console    finish test RFC2544 for Ixnetwork
+    \    ${location3}    evaluate    '${location2}'+'/'+'${csv_name}.csv'
+    \    @{csv_data}=    read csv file    ${location3}
+    \    sendEmail_RFC2544    ${time}    ${version}    ${type}    mail_receiver=@{Email_receiver}    csv_data=@{csv_data}
+
+RFC2544TestCase
+    [Arguments]    ${type}
+    config switch    ${type}
+    download version    ${type}
+    config firewall    ${type}
+    OSPF-1    ${type}
+    Comment    Ixnettest    ${type}
+
+OSPF-1
+    [Arguments]    ${type}
+    ### 创建ospf report csv###
+    ${path}    evaluate    '${type}'+'-ospf'
+    ${folder}    evaluate    '${location1}'+'/'+'${path}'
+    Create Folder    ${folder}
+    ${csv_name}    set Variable    ${type}_${version}_ospfResult
+    create_MaxRoutes_reportFile    ${folder}    ${csv_name}.csv
+    ###串口下完成测试相关配置####
+    ${interface}    set variable    x16
+    config_ospf    ${type}    ${interface}
+    ${max_dynamicRoutes}    get_ospf_target    ${type}
+    log to console    Max Dynamic Routes= ${max_dynamicRoutes}
+    ${default_ipv4_routes}    get routes num    ${type}
+    log to console    Default IPv4 Routes Num=${default_ipv4_routes}
+    # Extending the main ${ixnObj} object to all the instantiated classes
+    ${jsonfile}    evaluate    '${type}'+'-ospf-max-route-traffcis.json'
+    ${jsonConfigFile1}    set variable    C:/OSPF/${jsonfile}
+    log to console    ${jsonConfigFile1}
+    run_ospf_withIxnetwork    ${jsonConfigFile1}
+    ###Get routes num###
+    ${routes_ipv4_num}    ${rtn}    get_ospf_result    ${type}
+    ${routes_ipv4_supported}    evaluate    ${routes_ipv4_num}-${default_ipv4_routes}
+    write to csvFile    ${folder}    ${csv_name}    ${max_dynamicRoutes}    ${default_ipv4_routes}    ${routes_ipv4_supported}    ${rtn}
+    Comment    protocolObj.Stop All Protocols
+    Comment    sleep    5
+    Comment    trafficObj.Stop Traffic
+    Comment    sleep    5
+
+sunlin
+    [Arguments]    ${type}
+    # Extending the main ${ixnObj} object to all the instantiated classes
+    ${ixnObj} =    ixnObj.getSelfObject
+    portMgmtObj.setMainObject    ${ixnObj}
+    fileMgmtObj.setMainObject    ${ixnObj}
+    protocolObj.setMainObject    ${ixnObj}
+    trafficObj.setMainObject    ${ixnObj}
+    statisticObj.setMainObject    ${ixnObj}
+    Log To Console    Connecting to chassis ...
+    portMgmtObj.Connect Ix Chassis    ${ixChassisIp}
+    # Verify if ports are available. Take over if forceTakePortOwnership == True
+    ${result} =    portMgmtObj.Are Ports Available    portList=${portList}    raiseException=${False}
+    Run Keyword If    ("${result}"!=0) and ("${forceTakePortOwnership}"=="True")    Run Keywords    portMgmtObj.Release Ports    ${portList}
+    ...    AND    portMgmtObj.Clear Port Ownership    ${portList}
+    ...    ELSE    Fail    Ports are still owned
+    ${jsonData} =    fileMgmtObj.Json Read Config    ${jsonConfigFile}
+    Log To Console    Loading JSON config file to API server
+    ${newConfig}    Evaluate    str('newConfig')
+    fileMgmtObj.Import Json Config File    jsonFileName=${jsonConfigFile}    option=${newConfig}
+    Log To Console    Assigning ports
+    ${assignPortTimeout} =    Convert To Integer    300
+    fileMgmtObj.Json Assign Ports    ${jsonData}    ${portList}    timeout=${assignPortTimeout}
+    portMgmtObj.Verify Port State
+    Log To Console    Start all protocols
+    protocolObj.Start All Protocols
+    Log To Console    Verifying protocol sessions
+    protocolObj.Verify Protocol Sessions Up
+    Log To Console    Starting traffic
+    trafficObj.Start Traffic    applyTraffic=True    regenerateTraffic=True
+    #sleep    10
+    Log To Console    Getting stats
+    ${stats} =    statisticObj.Get Stats    viewName=Flow Statistics
+    Log To Console    ${stats}

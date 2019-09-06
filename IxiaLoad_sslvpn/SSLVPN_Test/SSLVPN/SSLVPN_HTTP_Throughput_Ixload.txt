@@ -1,0 +1,512 @@
+*** Settings ***
+Library           Telnet
+Library           Selenium2Library
+Library           DateTime
+Library           Collections
+Resource          ../Keyword/keyword.txt
+Library           IxL_RestApi.Main    apiServerIp=${apiServerIp}    apiServerIpPort=${apiServerIpPort}    deleteSession=${deleteSessionAfterTest}    generateRestLogFile=robotLogs    robotFrameworkStdout=True    WITH NAME
+...               ixlObj
+Library           SSHLibrary
+Library           Sonicwall
+
+*** Variables ***
+@{equipment_type}    9200    # 待测试设备类型，支持的设备有：2600,2650，TZ-300,TZ-400,TZ-500W,TZ-600。列表形式，顺序执行
+${group}          5    # 使用bp端口的group id，范围1-12
+${location}       C:/IxiaLoad_sslvpn/SSLVPN_Test/Report    # 测试报告保存地址，注意是斜杠方向”/"
+${ftp_username}    admin    # ftp 用户名
+${ftp_password}    admin    # ftp密码
+${ftpServer_ip}    10.7.3.245    # ftp服务器ip
+${version}        6.5.3.1-48n    # 待测试版本号,格式如：6.5.4.3-32n，6.5.2.0-12n。。ftp服务器上需要设置\\10.190.202.40\FIRMWARE\NG 为ftp下载根目录.
+&{UTMtest_control}    UTM_OFF=1    IPS_Max_Security=0    IPS_Perf_Optimized=0    GAV_Max_Security=0    GAV_Perf_Optimized=0    Anti_Spy_MaxSec=0    Anti_Spy_PerfOpt=0
+...               All_Max_Security=0    All_ Perf_Optimized=0    APP_Control=0    GAV_and_GAS_MaxSec=0    GAV_and_GAS_PerfOpt=0    # 各种组合是否需要测试，值为1时测试，值为0时不测试
+${apiServerIp}    localhost    # apiServer的ip地址，本机可以直接填“localhost“
+${apiServerIpPort}    8080    # apiserver使用的端口号，默认8080
+${rxfPath}        C:/IxiaLoad_sslvpn/SSLVPN_Conf/IxLoad_conf    # D:/RF_test/Ixload_PFW/PFW-2ports-8.40.rxf;C:/sslvpn_conf/TZ-600_SSLVPN_BothSides_10nodes.rxf;C:/IxiaLoad_sslvpn/SSLVPN_Conf/TZ-600_LAN_To_SSLVPN_10Nodes.rxf
+${rxfFile2}       D:/RF_test/Ixload_PFW/PFW-4ports-8.40.rxf
+@{port_1_1}       ${ixChassisIp}    5    7
+@{port_1_2}       ${ixChassisIp}    5    8
+@{port_1_3}       ${ixChassisIp}    5    7
+@{port_1_4}       ${ixChassisIp}    5    8
+${ixChassisIp}    10.7.1.234    #Ixload Chassis IP Address
+${ixLoadVersion}    8.40.115.169    # Ixload软件版本
+@{httpClient}     HTTP Concurrent Connections    TCP Timeouts    HTTP Bytes
+@{httpServer}     TCP Connections Established
+${serverOs}       windows
+${csvStatFile}    True
+${deleteSessionAfterTest}    True
+${csvFilePrependName}    RFtest
+${csvEnableFileTimestamp}    True
+${pollStatInterval}    2
+&{statsDict}      HTTPClient=${httpClient}    HTTPServer=${httpServer}
+${slot}           5    # bp端口槽位号
+@{portList}       2    3    # 和bp相连的交换机端口，需要和bp端口一一对应
+@{Email_receiver}    luli@sonicwall.com
+@{port1}          5    7
+@{port2}          5    8
+
+*** Test Cases ***
+RunCase
+    [Tags]    performance
+    [Template]    SSLVPN_Test
+    : FOR    ${item}    IN    @{equipment_type}
+    \    ${item}
+
+123
+    ${type}    set variable    9200
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${vlan}    evaluate    int(${data[0]["VLAN"]})
+    log to console    ${vlan}
+    [Teardown]
+
+*** Keywords ***
+config switch
+    [Arguments]    ${type}
+    #清除S6000-1,S6000-2，S3148交换机中待测盒子残留配置
+    @{data}=    read xls file    topology.xlsx    ${type}
+    : FOR    ${i}    IN    @{data}
+    \    ${vlan}    evaluate    int(${i["VLAN"]})
+    \    Clear_remaining_configuration_Swithch    ${data[0]["SWITCH_IP"]}    ${data[0]["S6000-2_IP"]}    ${data[0]["S3148_IP"]}    ${vlan}
+    #选择IXIA Slot4(4/11~4/14)的测试端口，需要跨S6000-2配置
+    ${slot}    set Variable    ${port_1_1[1]}
+    Connect S6000-1 with S6000-2    ${data[0]["SWITCH_IP"]}    ${data[0]["S6000-2_IP"]}    @{data}
+    ####
+    ${slot}    set Variable    ${port_1_1[1]}
+    @{portList}    create list
+    append to list    ${portList}    ${port_1_1[2]}    ${port_1_2[2]}
+    ###获取IXIA在交换机Perf-S6000上对应的端口列表###
+    @{data1}=    read xls file    topology.xlsx    IXIA-TO-SWITCH
+    @{SwitchPorList}    create list
+    : FOR    ${i}    IN    @{portList}
+    \    ${i}    evaluate    int(${i})
+    \    ${ports}    Get bp-to-switchportslist    ${slot}    ${i}    @{data1}
+    \    append to list    ${SwitchPorList}    ${ports}
+    Log Many    @{SwitchPorList}
+    ###telnet登陆交换机###
+    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == '2600' or '${type}' == '2650' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P' or '${type}' == 'SOHO-250' or '${type}' == 'SOHOW'    Telnet-login-switch    ${data[0]["S3148_IP"]}
+    ...    ELSE    Telnet-login-switch    ${data[0]["SWITCH_IP"]}
+    ###配置untag Port###
+    log to console    config untag ports
+    : FOR    ${i}    IN    @{data}
+    \    config_port_switchport    ${i["UNTAG"]}
+    \    ${vlan}    evaluate    int(${i["VLAN"]})
+    \    ${result}    tel    do show interfaces switchport ${i["UNTAG"]}
+    \    ${nativlan_id}    get_native_vlan    ${result}    U\\s+(\\d+)
+    \    run keyword if    '${nativlan_id}' == '${vlan}'    log    the port has already configed
+    \    ...    ELSE IF    '${nativlan_id}' == '1'    config_native_vlan    ${i["UNTAG"]}    ${vlan}
+    \    ...    ELSE    change_native_vlan    ${i["UNTAG"]}    ${nativlan_id}    ${vlan}
+    Telnet.Close Connection
+    #tag IxLoad对应的交换机端口
+    log to console    config tag ports
+    Telnet-login-switch    ${data[0]["SWITCH_IP"]}
+    : FOR    ${j}    IN    @{SwitchPorList}
+    \    config_port_switchport    ${j}
+    \    ${vlan}    evaluate    int(${data[0]["VLAN"]})
+    \    config_tag_port    ${j}    ${vlan}
+    \    config_tag_port    ${j}    4001
+    Telnet.Close Connection
+    ###配置S6000与S3148之间的连接###
+    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == '2600' or '${type}' == '2650' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P' or '${type}' == 'SOHO-250' or '${type}' == 'SOHOW'    Connect S6000 with S3148    ${data[0]["SWITCH_IP"]}    ${data[0]["S3148_IP"]}    @{data}
+    ###配置S6000-2###
+    config S6000-2    ${type}
+
+download version
+    [Arguments]    ${type}
+    ###串口登陆，ftp下载版本###
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    log to console    start download version for ${type}
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    ${mgmtport}    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P' or '${type}' == 'SOHO-250' or '${type}' == 'SOHOW'    set Variable    X2
+    ...    ELSE    set Variable    X1
+    CLI-config_wan_ip    ${mgmtport}    ${data[0]["HOST_IP"]}    ${data[0]["NETMASK"]}    ${data[0]["GATEWAY"]}
+    ###ping gateway check####
+    Telnet.Write    ping ${data[0]["GATEWAY"]}
+    sleep    5
+    Telnet.Read Until    is alive
+    sleep    1
+    ###download###
+    ${filename}=    run key word if    '${type}'=='9800'    Get 9800match Filename    ${reference_device_version}    ${type}
+    ...    ELSE    Get Match Filename    ${version}    ${type}
+    #对TZ系列来说，300s等待时间不够, 设置12分钟
+    ${rbtime}    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P' or '${type}' == 'SOHO-250' or '${type}' == 'SOHOW'    set Variable    720
+    ...    ELSE    set Variable    300
+    download firewall version and reboot with factory-default    ${ftp_username}    ${ftp_password}    ${ftpServer_ip}    ${filename}    ${rbtime}
+    log to console    finish download version for ${type}
+    Telnet.Close Connection
+    [Teardown]
+
+config firewall
+    [Arguments]    ${type}
+    ###获取盒子相关数据##
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    ###串口下完成测试相关配置####
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    #
+    ${mgmtport}    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P' or '${type}' == 'SOHO-250' or '${type}' == 'SOHOW'    set Variable    X2
+    ...    ELSE    set Variable    X1
+    log    ${mgmtport}
+    CLI-config_wan_ip    ${mgmtport}    ${data[0]["HOST_IP"]}    ${data[0]["NETMASK"]}    ${data[0]["GATEWAY"]}
+    Telnet.Close Connection
+    sleep    60
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    : FOR    ${i}    IN    @{data}
+    \    run key word if    '${i["WAN PORT"]}' != ''    CLI-config-Test-WAN    ${i["WAN PORT"]}    ${i["WAN IP"]}    ${i["WAN MASK"]}
+    \    run key word if    '${i["LAN PORT"]}' != ''    CLI-config-Test-LAN    ${i["LAN PORT"]}    ${i["LAN IP"]}    ${i["LAN MASK"]}
+    sleep    1
+    ###ping gateway check####
+    Telnet.Write    ping ${data[0]["GATEWAY"]}
+    sleep    5
+    Telnet.Read Until    is alive
+    Telnet.Write    exit
+    Telnet.Close Connection
+    ###通过https完成firewall注册###
+    sleep    5
+    login_by_https    ${data[0]["HOST_IP"]}    admin    password    firefox
+    sleep    10
+    Regist_FW_by_https    shsystem@163.com    sonicwall
+    sleep    3
+    close browser
+    LOG TO CONSOLE    Finish firewall config!
+    [Teardown]    close Browser
+
+SSLVPN_Test
+    [Arguments]    ${type}
+    sleep    1800
+    ${rtf_bothside}    evaluate    '${type}'+'_'+'SSLVPN_BothSides.rxf'
+    ${rtf_toLAN}    evaluate    '${type}'+'_'+'SSLVPN_To_LAN.rxf'
+    ${rtf_toSSLVPN}    evaluate    '${type}'+'_'+'LAN_To_SSLVPN.rxf'
+    ${location_bothside}    evaluate    '${rxfPath}'+'/'+'${type}'+'/'+'${rtf_bothside}'
+    ${location_toLAN}    evaluate    '${rxfPath}'+'/'+'${type}'+'/'+'${rtf_toLAN}'
+    ${location_toSSLVPN}    evaluate    '${rxfPath}'+'/'+'${type}'+'/'+'${rtf_toSSLVPN}'
+    config switch    ${type}
+    download version    ${type}
+    config firewall    ${type}
+    ${num}    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P' or '${type}' == 'SOHO-250' or '${type}' == 'SOHOW'    set variable    10
+    ...    ELSE IF    '${type}' == '2600' or '${type}' == '2650' or '${type}' == '3600' or '${type}' == '3650' or '${type}' == '4600' or '${type}' == '4650' or '${type}' == '5600' or '${type}' == '5650' or '${type}' == '6600' or '${type}' == '6650'    set variable    25
+    ...    ELSE    set variable    40
+    all_security_pre    ${type}    ${num}
+    LAN_TO_SSLVPN_Security_ON_Ixiaload    ${type}    ${location_toSSLVPN}
+    sleep    60
+    SSLVPN_TO_LAN_Security_ON_Ixiaload    ${type}    ${location_toLAN}
+    sleep    60
+    SSLVPN_Bothside_Security_ON_Ixiaload    ${type}    ${location_bothside}
+    sleep    60
+    no_security_pre    ${type}    ${num}
+    LAN_TO_SSLVPN_Security_OFF_Ixiaload    ${type}    ${location_toSSLVPN}
+    sleep    60
+    SSLVPN_TO_LAN_Security_OFF_Ixiaload    ${type}    ${location_toLAN}
+    sleep    60
+    SSLVPN_Bothside_Security_OFF_Ixiaload    ${type}    ${location_bothside}
+
+LAN_TO_SSLVPN_Security_OFF_Ixiaload
+    [Arguments]    ${type}    ${rxf_toSSLVPN}
+    ${tm}    get_current_date
+    ${time}    evaluate    '${tm}'.replace(' ','-')
+    ${time}    evaluate    '${time}'.replace(':','-')
+    ${time}    evaluate    '${time}'.split('.')[0]
+    ${excel_name}    set Variable    ${type}_LAN_TO_SSLVPN_SecOFF_Result_${time}
+    ${path}    evaluate    '${type}_'+'LAN_TO_SSLVPN_SecOFF'+'-'+'${version}'+'-Time'+'${time}'
+    ${location1}    evaluate    '${location}'+'/'+'${path}'
+    Create Folder    ${location1}
+    Create UTM ReportFile    ${location1}    ${excel_name}.xls
+    ${filename}    set Variable    ${excel_name}.xls
+    ###open IxloadGW###
+    open_IxloadGW
+    Log to console    Connecting to IxLoad gateway. Please wait for a new session to come up
+    ###Run Traffic###
+    ${connectTimeout} =    Convert To Integer    200
+    ixlObj.connect    ixLoadVersion=${ixLoadVersion}    timeout=${connectTimeout}
+    Log To Console    Loading config file to gateway server
+    ixlObj.LoadConfigFile    ${rxf_toSSLVPN}
+    Log To Console    assign chassis and port
+    @{port1List}    create list    ${port1}
+    log to console    @{port1List}
+    @{port2List}    create list    ${port2}
+    &{communityPortList}    Create Dictionary    chassisIp=${ixChassisIp}    Traffic1@Network1=${port1List}    Traffic2@Network2=${port2List}
+    Log To Console    assign chassis and port
+    ixlObj.Assign Chassis And Ports    ${communityPortList}
+    Log To Console    Enable port ownership
+    ixlObj.Enable Force Ownership
+    ixlObj.Get Stat Names
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    @{listname}    create list
+    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceFile}    evaluate    '${resultPath}'+'/'+'HTTP_Client.csv'
+    ${desFile}    evaluate    '${location1}'+'/'+'LAN_TO_SSLVPN_Security_OFF.csv'
+    copyfile    ${sourceFile}    ${desFile}
+    csv to xlsx    ${location1}    LAN_TO_SSLVPN_Security_OFF
+    ${throughout}=    get Ixload ClientResult    ${location1}    LAN_TO_SSLVPN_Security_OFF.xlsx
+    log to console    throughout=${throughout}
+    write to xlsFile    ${location1}    ${filename}    1    0    ${throughout}
+    log to console    SSLVPN_Test finish!
+    [Teardown]    ixlObj.Delete Session Id
+
+SSLVPN_TO_LAN_Security_OFF_Ixiaload
+    [Arguments]    ${type}    ${rxf_toLAN}
+    ${tm}    get_current_date
+    ${time}    evaluate    '${tm}'.replace(' ','-')
+    ${time}    evaluate    '${time}'.replace(':','-')
+    ${time}    evaluate    '${time}'.split('.')[0]
+    ${excel_name}    set Variable    ${type}_SSLVPN_TO_LAN_SecOFF_Result_${time}
+    ${path}    evaluate    '${type}_'+'SSLVPN_TO_LAN_SecOFF'+'-'+'${version}'+'-Time'+'${time}'
+    ${location1}    evaluate    '${location}'+'/'+'${path}'
+    Create Folder    ${location1}
+    Create UTM ReportFile    ${location1}    ${excel_name}.xls
+    ${filename}    set Variable    ${excel_name}.xls
+    ###open IxloadGW###
+    open_IxloadGW
+    Log to console    Connecting to IxLoad gateway. Please wait for a new session to come up
+    ###Run Traffic###
+    ${connectTimeout} =    Convert To Integer    200
+    ixlObj.connect    ixLoadVersion=${ixLoadVersion}    timeout=${connectTimeout}
+    Log To Console    Loading config file to gateway server
+    ixlObj.LoadConfigFile    ${rxf_toLAN}
+    Log To Console    assign chassis and port
+    @{port1List}    create list    ${port1}
+    log to console    @{port1List}
+    @{port2List}    create list    ${port2}
+    &{communityPortList}    Create Dictionary    chassisIp=${ixChassisIp}    Traffic1@Network1=${port1List}    Traffic2@Network2=${port2List}
+    Log To Console    assign chassis and port
+    ixlObj.Assign Chassis And Ports    ${communityPortList}
+    Log To Console    Enable port ownership
+    ixlObj.Enable Force Ownership
+    ixlObj.Get Stat Names
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    @{listname}    create list
+    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceFile}    evaluate    '${resultPath}'+'/'+'HTTP_Server.csv'
+    ${desFile}    evaluate    '${location1}'+'/'+'SSLVPN_TO_LAN_Security_OFF.csv'
+    copyfile    ${sourceFile}    ${desFile}
+    csv to xlsx    ${location1}    SSLVPN_TO_LAN_Security_OFF
+    ${throughout}=    get Ixload ServerResult    ${location1}    SSLVPN_TO_LAN_Security_OFF.xlsx
+    log to console    throughout=${throughout}
+    write to xlsFile    ${location1}    ${filename}    1    0    ${throughout}
+    log to console    SSLVPN_Test finish!
+    [Teardown]    ixlObj.Delete Session Id
+
+SSLVPN_Bothside_Security_OFF_Ixiaload
+    [Arguments]    ${type}    ${rtf_bothside}
+    ${tm}    get_current_date
+    ${time}    evaluate    '${tm}'.replace(' ','-')
+    ${time}    evaluate    '${time}'.replace(':','-')
+    ${time}    evaluate    '${time}'.split('.')[0]
+    ${excel_name}    set Variable    ${type}_SSLVPN_Bothside_SecOFF_Result_${time}
+    ${path}    evaluate    '${type}_'+'SSLVPN_Bothside_SecOFF'+'-'+'${version}'+'-Time'+'${time}'
+    ${location1}    evaluate    '${location}'+'/'+'${path}'
+    Create Folder    ${location1}
+    Create UTM ReportFile    ${location1}    ${excel_name}.xls
+    ${filename}    set Variable    ${excel_name}.xls
+    ###open IxloadGW###
+    open_IxloadGW
+    Log to console    Connecting to IxLoad gateway. Please wait for a new session to come up
+    ###Run Traffic###
+    ${connectTimeout} =    Convert To Integer    200
+    ixlObj.connect    ixLoadVersion=${ixLoadVersion}    timeout=${connectTimeout}
+    Log To Console    Loading config file to gateway server
+    ixlObj.LoadConfigFile    ${rtf_bothside}
+    Log To Console    assign chassis and port
+    @{port1List}    create list    ${port1}
+    log to console    @{port1List}
+    @{port2List}    create list    ${port2}
+    &{communityPortList}    Create Dictionary    chassisIp=${ixChassisIp}    Traffic1@Network1=${port1List}    Traffic2@Network2=${port2List}
+    Log To Console    assign chassis and port
+    ixlObj.Assign Chassis And Ports    ${communityPortList}
+    Log To Console    Enable port ownership
+    ixlObj.Enable Force Ownership
+    ixlObj.Get Stat Names
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    @{listname}    create list
+    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceClientFile}    evaluate    '${resultPath}'+'/'+'HTTP_Client.csv'
+    ${desClientFile}    evaluate    '${location1}'+'/'+'SSLVPN_HTTP_Client_Bothside_Security_OFF.csv'
+    ${sourceServerFile}    evaluate    '${resultPath}'+'/'+'HTTP_Server.csv'
+    ${desServerFile}    evaluate    '${location1}'+'/'+'SSLVPN_HTTP_Server_Bothside_Security_OFF.csv'
+    copyfile    ${sourceClientFile}    ${desClientFile}
+    copyfile    ${sourceServerFile}    ${desServerFile}
+    csv to xlsx    ${location1}    SSLVPN_HTTP_Client_Bothside_Security_OFF
+    csv to xlsx    ${location1}    SSLVPN_HTTP_Server_Bothside_Security_OFF
+    ${throughout_client}=    get Ixload ClientResult    ${location1}    SSLVPN_HTTP_Client_Bothside_Security_OFF.xlsx
+    ${throughout_server}=    get Ixload ServerResult    ${location1}    SSLVPN_HTTP_Server_Bothside_Security_OFF.xlsx
+    ${throughout}    evaluate    ${throughout_client}+${throughout_server}
+    log to console    throughout=${throughout}
+    write to xlsFile    ${location1}    ${filename}    1    0    ${throughout}
+    log to console    SSLVPN_Test finish!
+    [Teardown]    ixlObj.Delete Session Id
+
+LAN_TO_SSLVPN_Security_ON_Ixiaload
+    [Arguments]    ${type}    ${rxf_toSSLVPN}
+    ${tm}    get_current_date
+    ${time}    evaluate    '${tm}'.replace(' ','-')
+    ${time}    evaluate    '${time}'.replace(':','-')
+    ${time}    evaluate    '${time}'.split('.')[0]
+    ${excel_name}    set Variable    ${type}_LAN_TO_SSLVPN_SecON_Result_${time}
+    ${path}    evaluate    '${type}'+'_'+'LAN_TO_SSLVPN_SecON'+'-'+'${version}'+'-Time'+'${time}'
+    ${location1}    evaluate    '${location}'+'/'+'${path}'
+    Create Folder    ${location1}
+    Create UTM ReportFile    ${location1}    ${excel_name}.xls
+    ${filename}    set Variable    ${excel_name}.xls
+    ###open IxloadGW###
+    open_IxloadGW
+    Log to console    Connecting to IxLoad gateway. Please wait for a new session to come up
+    ###Run Traffic###
+    ${connectTimeout} =    Convert To Integer    200
+    ixlObj.connect    ixLoadVersion=${ixLoadVersion}    timeout=${connectTimeout}
+    Log To Console    Loading config file to gateway server
+    ixlObj.LoadConfigFile    ${rxf_toSSLVPN}
+    Log To Console    assign chassis and port
+    @{port1List}    create list    ${port1}
+    log to console    @{port1List}
+    @{port2List}    create list    ${port2}
+    &{communityPortList}    Create Dictionary    chassisIp=${ixChassisIp}    Traffic1@Network1=${port1List}    Traffic2@Network2=${port2List}
+    Log To Console    assign chassis and port
+    ixlObj.Assign Chassis And Ports    ${communityPortList}
+    Log To Console    Enable port ownership
+    ixlObj.Enable Force Ownership
+    ixlObj.Get Stat Names
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    @{listname}    create list
+    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceFile}    evaluate    '${resultPath}'+'/'+'HTTP_Client.csv'
+    ${desFile}    evaluate    '${location1}'+'/'+'LAN_TO_SSLVPN_Security_ON.csv'
+    copyfile    ${sourceFile}    ${desFile}
+    csv to xlsx    ${location1}    LAN_TO_SSLVPN_Security_ON
+    ${throughout}=    get Ixload ClientResult    ${location1}    LAN_TO_SSLVPN_Security_ON.xlsx
+    log to console    throughout=${throughout}
+    write to xlsFile    ${location1}    ${filename}    1    0    ${throughout}
+    log to console    SSLVPN_Test finish!
+    [Teardown]    ixlObj.Delete Session Id
+
+SSLVPN_TO_LAN_Security_ON_Ixiaload
+    [Arguments]    ${type}    ${rxf_toLAN}
+    ${tm}    get_current_date
+    ${time}    evaluate    '${tm}'.replace(' ','-')
+    ${time}    evaluate    '${time}'.replace(':','-')
+    ${time}    evaluate    '${time}'.split('.')[0]
+    ${excel_name}    set Variable    ${type}_SSLVPN_TO_LAN_SecON_Result_${time}
+    ${path}    evaluate    '${type}'+'_'+'SSLVPN_TO_LAN_SecON'+'-'+'${version}'+'-Time'+'${time}'
+    ${location1}    evaluate    '${location}'+'/'+'${path}'
+    Create Folder    ${location1}
+    Create UTM ReportFile    ${location1}    ${excel_name}.xls
+    ${filename}    set Variable    ${excel_name}.xls
+    ###open IxloadGW###
+    open_IxloadGW
+    Log to console    Connecting to IxLoad gateway. Please wait for a new session to come up
+    ###Run Traffic###
+    ${connectTimeout} =    Convert To Integer    200
+    ixlObj.connect    ixLoadVersion=${ixLoadVersion}    timeout=${connectTimeout}
+    Log To Console    Loading config file to gateway server
+    ixlObj.LoadConfigFile    ${rxf_toLAN}
+    Log To Console    assign chassis and port
+    @{port1List}    create list    ${port1}
+    log to console    @{port1List}
+    @{port2List}    create list    ${port2}
+    &{communityPortList}    Create Dictionary    chassisIp=${ixChassisIp}    Traffic1@Network1=${port1List}    Traffic2@Network2=${port2List}
+    Log To Console    assign chassis and port
+    ixlObj.Assign Chassis And Ports    ${communityPortList}
+    Log To Console    Enable port ownership
+    ixlObj.Enable Force Ownership
+    ixlObj.Get Stat Names
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    @{listname}    create list
+    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceFile}    evaluate    '${resultPath}'+'/'+'HTTP_Server.csv'
+    ${desFile}    evaluate    '${location1}'+'/'+'SSLVPN_TO_LAN_Security_ON.csv'
+    copyfile    ${sourceFile}    ${desFile}
+    csv to xlsx    ${location1}    SSLVPN_TO_LAN_Security_ON
+    ${throughout}=    get Ixload ServerResult    ${location1}    SSLVPN_TO_LAN_Security_ON.xlsx
+    log to console    throughout=${throughout}
+    write to xlsFile    ${location1}    ${filename}    1    0    ${throughout}
+    log to console    SSLVPN_Test finish!
+    [Teardown]    ixlObj.Delete Session Id
+
+SSLVPN_Bothside_Security_ON_Ixiaload
+    [Arguments]    ${type}    ${rtf_bothside}
+    ${tm}    get_current_date
+    ${time}    evaluate    '${tm}'.replace(' ','-')
+    ${time}    evaluate    '${time}'.replace(':','-')
+    ${time}    evaluate    '${time}'.split('.')[0]
+    ${excel_name}    set Variable    ${type}_SSLVPN_Bothside_SecON_Result_${time}
+    ${path}    evaluate    '${type}_'+'SSLVPN_Bothside_SecON'+'-'+'${version}'+'-Time'+'${time}'
+    ${location1}    evaluate    '${location}'+'/'+'${path}'
+    Create Folder    ${location1}
+    Create UTM ReportFile    ${location1}    ${excel_name}.xls
+    ${filename}    set Variable    ${excel_name}.xls
+    ###open IxloadGW###
+    open_IxloadGW
+    Log to console    Connecting to IxLoad gateway. Please wait for a new session to come up
+    ###Run Traffic###
+    ${connectTimeout} =    Convert To Integer    200
+    ixlObj.connect    ixLoadVersion=${ixLoadVersion}    timeout=${connectTimeout}
+    Log To Console    Loading config file to gateway server
+    ixlObj.LoadConfigFile    ${rtf_bothside}
+    Log To Console    assign chassis and port
+    @{port1List}    create list    ${port1}
+    log to console    @{port1List}
+    @{port2List}    create list    ${port2}
+    &{communityPortList}    Create Dictionary    chassisIp=${ixChassisIp}    Traffic1@Network1=${port1List}    Traffic2@Network2=${port2List}
+    Log To Console    assign chassis and port
+    ixlObj.Assign Chassis And Ports    ${communityPortList}
+    Log To Console    Enable port ownership
+    ixlObj.Enable Force Ownership
+    ixlObj.Get Stat Names
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    @{listname}    create list
+    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceClientFile}    evaluate    '${resultPath}'+'/'+'HTTP_Client.csv'
+    ${desClientFile}    evaluate    '${location1}'+'/'+'SSLVPN_HTTP_Client_Bothside_Security_ON.csv'
+    ${sourceServerFile}    evaluate    '${resultPath}'+'/'+'HTTP_Server.csv'
+    ${desServerFile}    evaluate    '${location1}'+'/'+'SSLVPN_HTTP_Server_Bothside_Security_ON.csv'
+    copyfile    ${sourceClientFile}    ${desClientFile}
+    copyfile    ${sourceServerFile}    ${desServerFile}
+    csv to xlsx    ${location1}    SSLVPN_HTTP_Client_Bothside_Security_ON
+    csv to xlsx    ${location1}    SSLVPN_HTTP_Server_Bothside_Security_ON
+    ${throughout_client}=    get Ixload ClientResult    ${location1}    SSLVPN_HTTP_Client_Bothside_Security_ON.xlsx
+    ${throughout_server}=    get Ixload ServerResult    ${location1}    SSLVPN_HTTP_Server_Bothside_Security_ON.xlsx
+    ${throughout}    evaluate    ${throughout_client}+${throughout_server}
+    log to console    throughout=${throughout}
+    write to xlsFile    ${location1}    ${filename}    1    0    ${throughout}
+    log to console    SSLVPN_Test finish!
+    [Teardown]    ixlObj.Delete Session Id

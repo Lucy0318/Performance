@@ -1,0 +1,763 @@
+*** Settings ***
+Library           BuiltIn
+Library           Telnet
+Library           DateTime
+Library           Collections
+Resource          ../keyword/keyword.txt
+Library           Sonicwall
+Library           Selenium2Library
+Library           requests
+Library           IxL_RestApi.Main    apiServerIp=${apiServerIp}    apiServerIpPort=${apiServerIpPort}    deleteSession=${deleteSessionAfterTest}    generateRestLogFile=robotLogs    robotFrameworkStdout=True    WITH NAME
+...               ixlObj
+
+*** Variables ***
+@{equipment_type}    TZ-400    # 待测试设备类型，支持:2600，2650，3600,3650，4600,4650,5600,5650,6600,6650，9200,9250,9400,9450，9600，9650,9800,TZ-300,TZ-400,TZ-500W,TZ-600等。列表形式，顺序执行
+${location}       D:/RF_test/report    # 测试报告保存地址，注意是斜杠方向”/"
+${ftp_username}    admin    # ftp 用户名
+${ftp_password}    admin    # ftp密码
+${ftpServer_ip}    10.7.100.220    # ftp服务器ip
+${version}        6.5.4.0-16n    # 待测试版本号,格式如：6.5.1.0-32n，6.5.2.0-12n。。ftp服务器上需要设置\\10.190.202.40\FIRMWARE\NG 为ftp下载根目录.
+&{UTMtest_control}    UTM_OFF=1    IPS_Max_Security=0    IPS_Perf_Optimized=0    GAV_Max_Security=0    GAV_Perf_Optimized=0    Anti_Spy_MaxSec=0    Anti_Spy_PerfOpt=0
+...               All_Max_Security=0    All_ Perf_Optimized=0    APP_Control=0    GAV_and_GAS_MaxSec=0    GAV_and_GAS_PerfOpt=0    # 各种组合是否需要测试，值为1时测试，值为0时不测试
+${apiServerIp}    localhost    # apiServer的ip地址，本机可以直接填“localhost“
+${apiServerIpPort}    8080    # apiserver使用的端口号，默认8080
+@{port1}          1    1    # port for Ixload test
+@{port2}          1    2    # port for Ixload test
+@{port3}          1    3    # port for Ixload test
+@{port4}          1    4    # port for Ixload test
+${ixLoadVersion}    8.40.115.169    # Ixload软件版本
+@{httpClient}     HTTP Concurrent Connections    TCP Timeouts    HTTP Bytes
+@{httpServer}     TCP Connections Established
+${csvStatFile}    True
+${deleteSessionAfterTest}    True
+${csvFilePrependName}    RFtest
+${csvEnableFileTimestamp}    True
+${pollStatInterval}    5
+&{statsDict}      HTTPClient=${httpClient}    HTTPServer=${httpServer}
+@{Email_receiver}    mji@sonicwall.com
+@{frameSize}      1518
+${apiServerOs}    windows
+${forceTakePortOwnership}    True
+${releasePortsWhenDone}    False
+${ixChassisIp}    10.7.1.234
+${rxfFile_path}    c:/
+
+*** Test Cases ***
+UTMperformance test
+    [Tags]    performance
+    [Template]    TMperformance testcase
+    : FOR    ${item}    IN    @{equipment_type}
+    \    ${item}
+    [Teardown]
+
+*** Keywords ***
+download version
+    [Arguments]    ${type}
+    ###串口登陆，ftp下载版本###
+    GetPFWTopologyDir IxLoad
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    log to console    start download version for ${type}
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    ${mgmtport}    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P'    set variable    X2
+    ...    ELSE    set variable    X1
+    CLI-config_wan_ip    ${mgmtport}    ${data[0]["HOST_IP"]}    ${data[0]["NETMASK"]}    ${data[0]["GATEWAY"]}
+    ${result}=    tel    show version
+    ###ping gateway check####
+    Write    ping ${data[0]["GATEWAY"]}
+    sleep    5
+    Read Until    is alive
+    sleep    1
+    ###download###
+    ${filename}=    Get Match Filename    ${version}    ${type}
+    ${value}=    evaluate    '''${result}'''.find('${version}')
+    #对TZ系列来说，300s等待时间不够, 设置12分钟
+    ${rbtime}    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P'    Set Variable    720
+    ...    ELSE    set variable    300
+    run key word if    ${value} == -1    download firewall version and reboot with factory-default    ${ftp_username}    ${ftp_password}    ${ftpServer_ip}    ${filename}
+    ...    ${rbtime}
+    ...    ELSE    boot current factory-default    240
+    Comment    download firewall version and reboot with factory-default    ${ftp_username}    ${ftp_password}    ${ftpServer_ip}    ${filename}    240
+    log to console    finish download version for ${type}
+    Close Connection
+    [Teardown]
+
+config firewall
+    [Arguments]    ${type}
+    ###获取盒子相关数据##
+    GetPFWTopologyDir IxLoad
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    ###串口下完成测试相关配置####
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    #
+    ${mgmtport}    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P'    set variable    X2
+    ...    ELSE    set variable    X1
+    log    ${mgmtport}
+    CLI-config_wan_ip    ${mgmtport}    ${data[0]["HOST_IP"]}    ${data[0]["NETMASK"]}    ${data[0]["GATEWAY"]}
+    Close Connection
+    sleep    60
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    : FOR    ${i}    IN    @{data}
+    \    run key word if    '${i["WAN PORT"]}' != ''    CLI-config-Test-WAN    ${i["WAN PORT"]}    ${i["WAN IP"]}    ${i["WAN MASK"]}
+    \    run key word if    '${i["LAN PORT"]}' != ''    CLI-config-Test-LAN    ${i["LAN PORT"]}    ${i["LAN IP"]}    ${i["LAN MASK"]}
+    sleep    1
+    CLI-WAN-to-LAN-Auto
+    ###ping gateway check####
+    Write    ping ${data[0]["GATEWAY"]}
+    sleep    5
+    Read Until    is alive
+    CLI-logout
+    ###通过https完成firewall注册###
+    login_by_https    ${data[0]["HOST_IP"]}    admin    password    firefox
+    sleep    5
+    Regist_FW_by_https    shsystem@163.com    sonicwall
+    sleep    1
+    Close Connection
+    LOG TO CONSOLE    Finish firewall config!
+    [Teardown]    close Browser
+
+config switch
+    [Arguments]    ${type}
+    ###telnet登陆交换机###
+    #根据网络拓扑的变化做如下调整，TZ-300,TZ-400,TZ-500W,TZ-600,2600流量口已经迁移至S3148交换机，其余PFW流量端口仍然连接在S6000上
+    GetPFWTopologyDir IxLoad
+    @{data}=    read xls file    topology.xlsx    ${type}
+    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == '2600' or '${type}' == '2650' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P' \    Telnet-login-switch    ${data[0]["S3148_IP"]}
+    ...    ELSE    Telnet-login-switch    ${data[0]["SWITCH_IP"]}
+    ########
+    ###获取IXIA在交换机Perf-S6000上对应的端口列表###
+    @{data1}=    read xls file    topology.xlsx    IXIA-TO-SWITCH
+    ${slot}    set variable    ${port1[0]}
+    @{portList}    create list
+    append to list    ${portList}    ${port1[1]}
+    append to list    ${portList}    ${port2[1]}
+    run keyword if    '${type}' == '9200' or '${type}' == '9400' or '${type}' == '9600' or '${type}' == '9800' or '${type}' == '6600' or '${type}' == '6650' or '${type}' == '9250' or '${type}' == '9450' or '${type}' == '9650' or '${type}' == '2650'    append to list    ${portList}    ${port3[1]}
+    run keyword if    '${type}' == '9200' or '${type}' == '9400' or '${type}' == '9600' or '${type}' == '9800' or '${type}' == '6600' or '${type}' == '6650' or '${type}' == '9250' or '${type}' == '9450' or '${type}' == '9650' or '${type}' == '2650'    append to list    ${portList}    ${port4[1]}
+    @{SwitchPorList}    create list
+    : FOR    ${i}    IN    @{portList}
+    \    ${i}    evaluate    int(${i})
+    \    ${ports}    Get bp-to-switchportslist    ${slot}    ${i}    @{data1}
+    \    append to list    ${SwitchPorList}    ${ports}
+    Log Many    @{SwitchPorList}
+    ###配置untag Port###
+    log to console    config untag ports
+    : FOR    ${i}    IN    @{data}
+    \    config_port_switchport    ${i["UNTAG"]}
+    \    ${vlan}    evaluate    int(${i["VLAN"]})
+    \    write    no interface vlan ${vlan}
+    \    Read Until Prompt
+    \    ${result}    tel    do show interfaces switchport ${i["UNTAG"]}
+    \    ${nativlan_id}    get_native_vlan    ${result}    U\\s+(\\d+)
+    \    run keyword if    ${nativlan_id} == ${vlan}    log    the port has already configed
+    \    ...    ELSE IF    ${nativlan_id} == 1    config_native_vlan    ${i["UNTAG"]}    ${vlan}
+    \    ...    ELSE    change_native_vlan    ${i["UNTAG"]}    ${nativlan_id}    ${vlan}
+    Close Connection
+    ###配置tag Port####
+    Telnet-login-switch    ${data[0]["SWITCH_IP"]}
+    log to console    config tag ports
+    ${SwitchPortList2}=    evaluate    ${SwitchPorList}+${SwitchPorList}
+    : FOR    ${i}    ${j}    IN ZIP    ${data}    ${SwitchPortList2}
+    \    ${vlan}    evaluate    int(${i["VLAN"]})
+    \    config_port_switchport    ${j}
+    \    config_tag_port    ${j}    ${vlan}
+    #如果是TZ-300,TZ-400,TZ-500W,TZ-600,2600的盒子，S6000的和S3148的端口分别tag到Vlan。
+    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == '2600' or '${type}' == '2650' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P'    Connect S6000 with S3148    ${type}
+    Close Connection
+    log to console    finish config switch!
+
+Ixloadtest
+    [Arguments]    ${type}
+    GetPFWTopologyDir IxLoad
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ####Create folder for result files#####
+    ${tm}    get_current_date
+    ${time}    evaluate    '${tm}'.replace(' ','-')
+    ${time}    evaluate    '${time}'.replace(':','-')
+    ${time}    evaluate    '${time}'.split('.')[0]
+    ${excel_name}    set Variable    ${type}_UTMResult_${time}
+    ${path}    evaluate    '${type}'+'_HTTP'+'-'+'${version}'+'-Time'+'${time}'
+    ${location1}    evaluate    '${location}'+'/'+'${path}'
+    Create Folder    ${location1}
+    Create UTM ReportFile    ${location1}    ${excel_name}.xls
+    ###For API Server###
+    Log to console    Connecting to IxLoad gateway. Please wait for a new session to come up
+    Comment    ${connectTimeout} =    Convert To Integer    200
+    Comment    ixlObj.connect    ixLoadVersion=${ixLoadVersion}    timeout=${connectTimeout}
+    Comment    Run Keyword If    "${serverOs}"=="linux"    RunKeyword    ixlObj.Upload File    ${uploadRxfFileToLinuxServer}    ${rxfFile}
+    Log To Console    Loading config file to gateway server
+    run keyword if    '${type}' == '9200' or '${type}' == '9400' or '${type}' == '9600' or '${type}' == '9800' or '${type}' == '6600' or '${type}' == '6650' or '${type}' == '9250' or '${type}' == '9450' or '${type}' == '9650' or '${type}' == '2650'    Modify Config 4Ports    ${type}
+    ...    ELSE    Modify Config 2Ports    ${type}
+    ###初始化参数###
+    @{port1List}    create list    ${port1}
+    @{port2List}    create list    ${port2}
+    run keyword if    '${type}' == '9200' or '${type}' == '9400' or '${type}' == '9600' or '${type}' == '9800' or '${type}' == '6600' or '${type}' == '6650' or '${type}' == '9250' or '${type}' == '9450' or '${type}' == '9650' or '${type}' == '2650'    append to list    ${port1List}    ${port3}
+    run keyword if    '${type}' == '9200' or '${type}' == '9400' or '${type}' == '9600' or '${type}' == '9800' or '${type}' == '6600' or '${type}' == '6650' or '${type}' == '9250' or '${type}' == '9450' or '${type}' == '9650' or '${type}' == '2650'    append to list    ${port2List}    ${port4}
+    &{communityPortList}    Create Dictionary    chassisIp=${ixChassisIp}    Traffic1@Network1=${port1List}    Traffic2@Network2=${port2List}
+    Log To Console    assign chassis and port
+    ixlObj.Assign Chassis And Ports    ${communityPortList}
+    Log To Console    Enable port ownership
+    ixlObj.Enable Force Ownership
+    ixlObj.Get Stat Names
+    ###遍历各种情况UTM吞吐量###
+    run keyword if    ${UTMtest_control["UTM_OFF"]} == 1    HTTP_UTM_OFF_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["IPS_Max_Security"]} == 1    HTTP_IPS_Max_Security_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["IPS_Perf_Optimized"]} == 1    HTTP_IPS_Perf_Optimized_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["GAV_Max_Security"]} == 1    HTTP_GAV_Max_Security_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["GAV_Perf_Optimized"]} == 1    HTTP_GAV_Perf_Optimized_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["Anti_Spy_MaxSec"]} == 1    HTTP_Anti_Spy_Max_Security_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["Anti_Spy_PerfOpt"]} == 1    HTTP_Anti_Spy_Optimized_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["All_Max_Security"]} == 1    HTTP_All_Max_Security_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["All_ Perf_Optimized"]} == 1    HTTP_All_ Perf_Optimized_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["APP_Control"]} == 1    HTTP_APP_Control_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["GAV_and_GAS_MaxSec"]} == 1    HTTP_GAV_AS_Max_Security_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${UTMtest_control["GAV_and_GAS_PerfOpt"]} == 1    HTTP_GAV_GAS_Optimized_Test    ${type}    ${location1}    ${excel_name}.xls
+    ###Remove the coppied configure file and html files
+    RemvoeIxloadConfigfile    ${rxfFile}
+    RemvoeIxloadConfigfile    c:/512k_GET.html
+    RemvoeIxloadConfigfile    c:/512k_PUT.html
+    RemvoeIxloadConfigfile    c:/phillip_512k.html
+    ##Back to SPI mode##
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-SPI-Connections    200
+    Close Connection
+    ##Send the Result to Email##
+    ${location2}    evaluate    '${location1}'+'/'+'${excel_name}.xls'
+    @{csv_data}=    read xls file    ${location2}    UTM Result
+    sendEmail_UTMTest    ${time}    ${version}    ${type}    mail_receiver=@{Email_receiver}    csv_data=@{csv_data}
+    [Teardown]    ixlObj.Delete Session Id
+
+TMperformance testcase
+    [Arguments]    ${type}
+    Comment    download version    ${type}
+    Comment    config firewall    ${type}
+    Comment    config switch    ${type}
+    Comment    Ixloadtest    ${type}
+    log    hello
+
+HTTP_UTM_OFF_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    GetPFWTopologyDir IxLoad
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config SPI enable####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-SPI-Connections    300
+    Close Connection
+    ###Run Traffics and Get Statistic Result###
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    @{listname}    create list
+    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceFile}    evaluate    '${resultPath}'+'/'+'HTTP_Client.csv'
+    ${desFile}    evaluate    '${location1}'+'/'+'HTTP_Client_UTM_OFF.csv'
+    copyfile    ${sourceFile}    ${desFile}
+    csv to xlsx    ${location1}    HTTP_Client_UTM_OFF
+    ${throughout}=    get IxloadResult    ${location1}    HTTP_Client_UTM_OFF.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    0    ${throughout}
+    log to console    UTM_OFF_Test finish!
+
+HTTP_IPS_Max_Security_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    GetPFWTopologyDir IxLoad
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config IPS_Max_Security####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    300
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-security maximum
+    CLI-Enable-IPS
+    Close Connection
+    ###Run Traffics and Get Statistic Result###
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    @{listname}    create list
+    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceFile}    evaluate    '${resultPath}'+'/'+'HTTP_Client.csv'
+    ${desFile}    evaluate    '${location1}'+'/'+'HTTP_Client_IPS_Max.csv'
+    copyfile    ${sourceFile}    ${desFile}
+    csv to xlsx    ${location1}    HTTP_Client_IPS_Max
+    ${throughout}=    get IxloadResult    ${location1}    HTTP_Client_IPS_Max.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    1    ${throughout}
+    log to console    UTM_IPS_Max_Test finish!
+    ###IPS disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-IPS
+    Close Connection
+
+HTTP_IPS_Perf_Optimized_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    GetPFWTopologyDir IxLoad
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config IPS_Opt_Security####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    300
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Performance Optimized
+    CLI-Enable-IPS
+    Close Connection
+    ###Run Traffics and Get Statistic Result###
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    @{listname}    create list
+    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceFile}    evaluate    '${resultPath}'+'/'+'HTTP_Client.csv'
+    ${desFile}    evaluate    '${location1}'+'/'+'HTTP_Client_IPS_Opt.csv'
+    copyfile    ${sourceFile}    ${desFile}
+    csv to xlsx    ${location1}    HTTP_Client_IPS_Opt
+    ${throughout}=    get IxloadResult    ${location1}    HTTP_Client_IPS_Opt.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    2    ${throughout}
+    log to console    UTM_IPS_Opt_Test finish!
+    ###IPS disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-IPS
+    Close Connection
+
+HTTP_GAV_Max_Security_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    GetPFWTopologyDir IxLoad
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config GAV_Max_Security####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    300
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-security maximum
+    CLI-Enable-GAV
+    Close Connection
+    ###Run Traffics and Get Statistic Result###
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    @{listname}    create list
+    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceFile}    evaluate    '${resultPath}'+'/'+'HTTP_Client.csv'
+    ${desFile}    evaluate    '${location1}'+'/'+'HTTP_Client_GAV_Max.csv'
+    copyfile    ${sourceFile}    ${desFile}
+    csv to xlsx    ${location1}    HTTP_Client_GAV_Max
+    ${throughout}=    get IxloadResult    ${location1}    HTTP_Client_GAV_Max.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    3    ${throughout}
+    log to console    UTM_GAV_Max_Test finish!
+    ###GAV disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-GAV
+    Close Connection
+
+HTTP_GAV_Perf_Optimized_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    GetPFWTopologyDir IxLoad
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config GAV_Perf_Optimized####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    300
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Performance Optimized
+    CLI-Enable-GAV
+    Close Connection
+    ###Run Traffics and Get Statistic Result###
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    @{listname}    create list
+    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceFile}    evaluate    '${resultPath}'+'/'+'HTTP_Client.csv'
+    ${desFile}    evaluate    '${location1}'+'/'+'HTTP_Client_GAV_Opt.csv'
+    copyfile    ${sourceFile}    ${desFile}
+    csv to xlsx    ${location1}    HTTP_Client_GAV_Opt
+    ${throughout}=    get IxloadResult    ${location1}    HTTP_Client_GAV_Opt.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    4    ${throughout}
+    log to console    UTM_GAV_Opt_Test finish!
+    ###GAV disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-GAV
+    Close Connection
+
+HTTP_Anti_Spy_Max_Security_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    GetPFWTopologyDir IxLoad
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config Anti_Spy_Max_Security####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    300
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-security maximum
+    CLI-Enable-AntiSpyware
+    Close Connection
+    ###Run Traffics and Get Statistic Result###
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    @{listname}    create list
+    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceFile}    evaluate    '${resultPath}'+'/'+'HTTP_Client.csv'
+    ${desFile}    evaluate    '${location1}'+'/'+'HTTP_Client_Anti_Spy_Max.csv'
+    copyfile    ${sourceFile}    ${desFile}
+    csv to xlsx    ${location1}    HTTP_Client_Anti_Spy_Max
+    ${throughout}=    get IxloadResult    ${location1}    HTTP_Client_Anti_Spy_Max.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    5    ${throughout}
+    log to console    UTM_Anti_Spy_Max_Test finish!
+    ###AntiSpyware disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-AntiSpyware
+    Close Connection
+
+HTTP_Anti_Spy_Optimized_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    GetPFWTopologyDir IxLoad
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config Anti_Spy_Optimized####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    300
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Performance Optimized
+    CLI-Enable-AntiSpyware
+    Close Connection
+    ###Run Traffics and Get Statistic Result###
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    @{listname}    create list
+    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceFile}    evaluate    '${resultPath}'+'/'+'HTTP_Client.csv'
+    ${desFile}    evaluate    '${location1}'+'/'+'HTTP_Client_Anti_Spy_Opt.csv'
+    copyfile    ${sourceFile}    ${desFile}
+    csv to xlsx    ${location1}    HTTP_Client_Anti_Spy_Opt
+    ${throughout}=    get IxloadResult    ${location1}    HTTP_Client_Anti_Spy_Opt.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    6    ${throughout}
+    log to console    UTM_Anti_Spy_Opt_Test finish!
+    ###AntiSpyware disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-AntiSpyware
+    Close Connection
+
+HTTP_All_Max_Security_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    GetPFWTopologyDir IxLoad
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config All_Max_Security####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    300
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-security maximum
+    CLI-Enable-IPS
+    CLI-Enable-GAV
+    CLI-Enable-AntiSpyware
+    Close Connection
+    ###Run Traffics and Get Statistic Result###
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    Comment    @{listname}    create list
+    Comment    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}
+    ...    csvFilePrependName=${csvFilePrependName}
+    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceFile}    evaluate    '${resultPath}'+'/'+'HTTP_Client.csv'
+    ${desFile}    evaluate    '${location1}'+'/'+'HTTP_Client_All_Max_Security.csv'
+    copyfile    ${sourceFile}    ${desFile}
+    csv to xlsx    ${location1}    HTTP_Client_All_Max_Security
+    ${throughout}=    get IxloadResult    ${location1}    HTTP_Client_All_Max_Security.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    7    ${throughout}
+    log to console    UTM_All_Max_Security_Test finish!
+    ###ALL Security disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-IPS
+    CLI-Disable-GAV
+    CLI-Disable-AntiSpyware
+    Close Connection
+
+HTTP_All_Perf_Optimized_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    GetPFWTopologyDir IxLoad
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config All_Perf_Optimized####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    300
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Performance Optimized
+    CLI-Enable-IPS
+    CLI-Enable-GAV
+    CLI-Enable-AntiSpyware
+    Close Connection
+    ###Run Traffics and Get Statistic Result###
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    @{listname}    create list
+    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceFile}    evaluate    '${resultPath}'+'/'+'HTTP_Client.csv'
+    ${desFile}    evaluate    '${location1}'+'/'+'HTTP_Client_All_Perf_Opt.csv'
+    copyfile    ${sourceFile}    ${desFile}
+    csv to xlsx    ${location1}    HTTP_Client_All_Perf_Opt
+    ${throughout}=    get IxloadResult    ${location1}    HTTP_Client_All_Perf_Opt.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    8    ${throughout}
+    log to console    UTM_All_Perf_Opt_Test finish!
+    ###ALL Security disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-IPS
+    CLI-Disable-GAV
+    CLI-Disable-AntiSpyware
+    Close Connection
+
+HTTP_APP_Control_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    GetPFWTopologyDir IxLoad
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config Application Control####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    300
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Enable-APP-Control
+    Close Connection
+    ###Run Traffics and Get Statistic Result###
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    @{listname}    create list
+    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceFile}    evaluate    '${resultPath}'+'/'+'HTTP_Client.csv'
+    ${desFile}    evaluate    '${location1}'+'/'+'HTTP_Client_APP_Control.csv'
+    copyfile    ${sourceFile}    ${desFile}
+    csv to xlsx    ${location1}    HTTP_Client_APP_Control
+    ${throughout}=    get IxloadResult    ${location1}    HTTP_Client_APP_Control.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    9    ${throughout}
+    log to console    UTM_App_Control_Test finish!
+    ###IPS disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-APP-Control
+    Close Connection
+
+HTTP_GAV_AS_Max_Security_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    GetPFWTopologyDir IxLoad
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config GAV_AS_Max_Security####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    300
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-security maximum
+    CLI-Enable-GAV
+    CLI-Enable-AntiSpyware
+    Close Connection
+    ###Run Traffics and Get Statistic Result###
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    @{listname}    create list
+    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceFile}    evaluate    '${resultPath}'+'/'+'HTTP_Client.csv'
+    ${desFile}    evaluate    '${location1}'+'/'+'HTTP_Client_GAV_AS_Max.csv'
+    copyfile    ${sourceFile}    ${desFile}
+    csv to xlsx    ${location1}    HTTP_Client_GAV_AS_Max
+    ${throughout}=    get IxloadResult    ${location1}    HTTP_Client_GAV_AS_Max.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    10    ${throughout}
+    log to console    UTM_GAV_AS_Max_Security_Test finish!
+    ###ALL Security disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-GAV
+    CLI-Disable-AntiSpyware
+    Close Connection
+
+HTTP_GAV_GAS_Optimized_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    GetPFWTopologyDir IxLoad
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config GAV_AS_Perf_Optimized####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    300
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Performance Optimized
+    CLI-Enable-GAV
+    CLI-Enable-AntiSpyware
+    Close Connection
+    ###Run Traffics and Get Statistic Result###
+    Log To Console    Run Traffic and verify for success
+    ixlObj.Run Traffic
+    Log To Console    Poll stat
+    ${pollStatInterval} =    Convert To Integer    5
+    @{listname}    create list
+    @{listname}=    ixlObj.Poll Stats    ${statsDict}    pollStatInterval=${pollStatInterval}    csvFile=${csvStatFile}    csvEnableFileTimestamp=${csvEnableFileTimestamp}    csvFilePrependName=${csvFilePrependName}
+    Log To Console    Wait for active test to unconfigure
+    ${resultPath}=    getResultPath
+    log    ${resultPath}
+    ixlObj.Wait For Active Test To Unconfigure
+    ${sourceFile}    evaluate    '${resultPath}'+'/'+'HTTP_Client.csv'
+    ${desFile}    evaluate    '${location1}'+'/'+'HTTP_Client_GAV_AS_Perf_Opt.csv'
+    copyfile    ${sourceFile}    ${desFile}
+    csv to xlsx    ${location1}    HTTP_Client_GAV_AS_Perf_Opt
+    ${throughout}=    get IxloadResult    ${location1}    HTTP_Client_GAV_AS_Perf_Opt.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    11    ${throughout}
+    log to console    UTM_GAV_AS_Perf_Opt_Test finish!
+    ###GAV AS Performance Optimized disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-GAV
+    CLI-Disable-AntiSpyware
+    Close Connection
+
+Modify_Config_2Ports
+    [Arguments]    ${type}
+    ${connectTimeout} =    Convert To Integer    200
+    Log to console    Connecting to IxLoad gateway. Please wait for a new session to come up
+    ixlObj.connect    ixLoadVersion=${ixLoadVersion}    timeout=${connectTimeout}
+    Log To Console    Loading 2Ports config file to gateway server
+    ###Copy Ixload Configure files and html files from server to local
+    ${rxfFile_name}    Set Variable    PFW-2ports-8.40.rxf
+    ${rxfFile}    evaluate    '${rxfFile_path}'+'${rxfFile_name}'
+    Set Suite Variable    ${rxfFile}
+    Copyfile    //10.190.202.40/Shanghai QA/SystemTest/Perf2/IxLoad/IxLoad Configure files/${rxfFile_name}    ${rxfFile}
+    sleep    20
+    log    ${rxfFile}
+    Copyfile    //10.190.202.40/Shanghai QA/SystemTest/Perf2/IxLoad/IxLoad htm files/512k_GET.html    c:/512k_GET.html
+    Copyfile    //10.190.202.40/Shanghai QA/SystemTest/Perf2/IxLoad/IxLoad htm files/512k_PUT.html    c:/512k_PUT.html
+    Copyfile    //10.190.202.40/Shanghai QA/SystemTest/Perf2/IxLoad/IxLoad htm files/phillip_512k.html    c:/phillip_512k.html
+    ixlObj.Load Config File    ${rxfFile}
+    #
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${vlan1}    evaluate    int(${data[0]["VLAN"]})
+    ${vlan2}    evaluate    int(${data[1]["VLAN"]})
+    ${sessionidUrl}=    ixlObj.getIdUrl
+    ${restApi1}    restApi_modify_lan1    ${sessionidUrl}
+    ${restApi2}    restApi_modify_wan1    ${sessionidUrl}
+    ${restApi3}    restApi_modify_lan2    ${sessionidUrl}
+    ${restApi4}    restApi_modify_wan2    ${sessionidUrl}
+    ${dictvlan1}    create dictionary    enabled=true    firstId=${vlan1}    increment=0
+    ${dictvlan2}    create dictionary    enabled=true    firstId=${vlan2}    increment=0
+    ${dictvlan3}    create dictionary    enabled=false
+    ${dictvlan4}    create dictionary    enabled=false
+    ixlObj.patch    ${restApi1}    data=${dictvlan1}
+    ixlObj.patch    ${restApi2}    data=${dictvlan2}
+    ixlObj.patch    ${restApi3}    data=${dictvlan3}
+    ixlObj.patch    ${restApi4}    data=${dictvlan4}
+    Comment    ${saveApi}=    Evaluate    '${sessionidUrl}'+'/ixLoad/test/operations/save'
+    Comment    ixlObj.post    ${saveApi}
+    ######
+    Comment    ixlObj.applyConfiguration
+    [Teardown]
+
+Modify_Config_4Ports
+    [Arguments]    ${type}
+    ${connectTimeout} =    Convert To Integer    200
+    Log to console    Connecting to IxLoad gateway. Please wait for a new session to come up
+    ixlObj.connect    ixLoadVersion=${ixLoadVersion}    timeout=${connectTimeout}
+    Log To Console    Loading 4Ports config file to gateway server
+    ###Copy Ixload Configure files and html files from server to local
+    ${rxfFile_name}    Set Variable    PFW-4ports-8.40.rxf
+    ${rxfFile}    evaluate    '${rxfFile_path}'+'${rxfFile_name}'
+    Set Suite Variable    ${rxfFile}
+    Copyfile    //10.190.202.40/Shanghai QA/SystemTest/Perf2/IxLoad/IxLoad Configure files/${rxfFile_name}    ${rxfFile}
+    sleep    20
+    log    ${rxfFile}
+    Copyfile    //10.190.202.40/Shanghai QA/SystemTest/Perf2/IxLoad/IxLoad htm files/512k_GET.html    c:/512k_GET.html
+    Copyfile    //10.190.202.40/Shanghai QA/SystemTest/Perf2/IxLoad/IxLoad htm files/512k_PUT.html    c:/512k_PUT.html
+    Copyfile    //10.190.202.40/Shanghai QA/SystemTest/Perf2/IxLoad/IxLoad htm files/phillip_512k.html    c:/phillip_512k.html
+    ixlObj.Load Config File    ${rxfFile}
+    #
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${vlan1}    evaluate    int(${data[0]["VLAN"]})
+    ${vlan2}    evaluate    int(${data[1]["VLAN"]})
+    ${vlan3}    evaluate    int(${data[2]["VLAN"]})
+    ${vlan4}    evaluate    int(${data[3]["VLAN"]})
+    ${sessionidUrl}=    ixlObj.getIdUrl
+    ${restApi1}    restApi_modify_lan1    ${sessionidUrl}
+    ${restApi2}    restApi_modify_wan1    ${sessionidUrl}
+    Comment    ${restApi3}    restApi_modify_lan2    ${sessionidUrl}
+    Comment    ${restApi4}    restApi_modify_wan2    ${sessionidUrl}
+    ${dictvlan1}    create dictionary    enabled=true    firstId=${vlan1}    increment=0
+    ${dictvlan2}    create dictionary    enabled=true    firstId=${vlan2}    increment=0
+    Comment    ${dictIP3}    create dictionary    enabled=true
+    Comment    ${dictIP4}    create dictionary    enabled=true
+    ixlObj.patch    ${restApi1}    data=${dictvlan1}
+    ixlObj.patch    ${restApi2}    data=${dictvlan2}
+    Comment    ixlObj.patch    ${restApi3}    data=${dictIP3}
+    Comment    ixlObj.patch    ${restApi4}    data=${dictIP4}
+    Comment    ${saveApi}=    Evaluate    '${sessionidUrl}'+'/ixLoad/test/operations/save'
+    Comment    ixlObj.applyConfiguration
+    ${dictvlan3}    create dictionary    enabled=true    firstId=${vlan3}    increment=0
+    ${dictvlan4}    create dictionary    enabled=true    firstId=${vlan4}    increment=0
+    ${restApi3}    restApi_modify_lan2    ${sessionidUrl}    /vlanRange
+    ${restApi4}    restApi_modify_wan2    ${sessionidUrl}    /vlanRange
+    ixlObj.patch    ${restApi3}    data=${dictvlan3}
+    ixlObj.patch    ${restApi4}    data=${dictvlan4}
+    Comment    ${saveApi}=    Evaluate    '${sessionidUrl}'+'/ixLoad/test/operations/save'
+    Comment    ixlObj.post    ${saveApi}
+    #####
+    Comment    ixlObj.applyConfiguration

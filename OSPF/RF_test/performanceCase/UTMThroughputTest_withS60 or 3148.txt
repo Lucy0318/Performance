@@ -1,0 +1,610 @@
+*** Settings ***
+Library           Telnet
+Library           Selenium2Library
+Library           DateTime
+Library           Sonicwall
+Library           breakingpoint    10.7.1.234    admin    admin
+Library           Collections
+Resource          ../keyword/keyword.txt
+
+*** Variables ***
+@{equipment_type}    TZ-600    # 待测试设备类型，支持的设备有：2600,2650，TZ-300,TZ-400,TZ-500W,TZ-600。列表形式，顺序执行
+${slot}           5    # bp端口槽位号
+@{portList}       2    3    # 和bp相连的交换机端口，需要和bp端口一一对应
+${group}          2    # 使用bp端口的group id，范围1-12
+${location}       d:/RF_test/report    # 测试报告保存地址，注意是斜杠方向”/"
+${ftp_username}    admin    # ftp 用户名
+${ftp_password}    admin    # ftp密码
+${ftpServer_ip}    10.103.18.254    # ftp服务器ip
+${version}        6.5.2.0-23n    # 待测试版本号,格式如：6.5.1.0-32n，6.5.2.0-12n。。ftp服务器上需要设置\\10.190.202.40\FIRMWARE\NG 为ftp下载根目录.
+&{test_control}    UTM_OFF=1    IPS_Max_Security=1    IPS_Perf_Optimized=1    GAV_Max_Security=1    GAV_Perf_Optimized=1    Anti_Spy_MaxSec=1    Anti_Spy_PerfOpt=1
+...               All_Max_Security=1    All_ Perf_Optimized=1    # 各种组合是否需要测试，值为1时测试，值为0时不测试
+
+*** Test Cases ***
+RunCase
+    [Tags]    performance
+    [Template]    UTMThroughputTestCase
+    : FOR    ${item}    IN    @{equipment_type}
+    \    ${item}
+
+123
+    csv to xlsx    ${location}    1
+    ${throughout}    Get UTMResult 4ports    ${location}    1.xlsx
+
+*** Keywords ***
+config switch
+    [Arguments]    ${type}
+    run keyword if    '${type}' == '2650'    config S3148    ${type}
+    ...    ELSE    config S60    ${type}
+    ###获取bp在交换机上对应的端口列表###
+    @{data1}=    read xls file    topology.xlsx    BP-TO-SWITCH
+    @{SwitchPorList}    create list
+    : FOR    ${i}    IN    @{portList}
+    \    ${i}    evaluate    int(${i})
+    \    ${ports}    Get bp-to-switchportslist    ${slot}    ${i}    @{data1}
+    \    append to list    ${SwitchPorList}    ${ports}
+    Log Many    @{SwitchPorList}
+    log to console    config S6000 switch
+    ###telnet登陆S6000####
+    @{data}=    read xls file    topology.xlsx    ${type}
+    Telnet-login-switch    ${data[0]["S6000_IP"]}
+    ${Uplink}    set variable if    '${type}' == '2650'    Te 0/98    Te 0/120
+    : FOR    ${i}    ${j}    IN ZIP    ${data}    ${SwitchPorList}
+    \    ${vlan}    evaluate    int(${i["VLAN"]})
+    \    write    no interface vlan ${vlan}
+    \    config_port_switchport    ${j}
+    \    config_tag_port    ${j}    ${vlan}
+    \    config_tag_port    ${Uplink}    ${vlan}
+    log to console    finish config S6000 switch !
+    Close Connection
+
+download version
+    [Arguments]    ${type}
+    ###串口登陆，ftp下载版本###
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    log to console    start download version for ${type}
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-config_wan_ip    ${data[0]["HOST_INTERFACE"]}    ${data[0]["HOST_IP"]}    ${data[0]["NETMASK"]}    ${data[0]["GATEWAY"]}
+    ${result}=    tel    show version
+    ###ping gateway check####
+    Write    ping ${data[0]["GATEWAY"]}
+    sleep    5
+    Read Until    is alive
+    sleep    1
+    ###download###
+    ${filename}=    Get Match Filename    ${version}    ${type}
+    Comment    ${path}    evaluate    '${version_path}'.split('/')[-1]
+    ${value}=    evaluate    '''${result}'''.find('${version}')
+    run key word if    ${value} == -1    download firewall version and reboot with factory-default    ${ftp_username}    ${ftp_password}    ${ftpServer_ip}    ${filename}
+    ...    480
+    ...    ELSE    boot current factory-default    300
+    log to console    finish download version for ${type}
+    Close Connection
+    [Teardown]
+
+config firewall
+    [Arguments]    ${type}
+    ###获取盒子相关数据##
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    ###串口下完成测试相关配置####
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    : FOR    ${i}    IN    @{data}
+    \    run key word if    '${i["LAN PORT"]}' != ''    CLI-config-Test-LAN    ${i["LAN PORT"]}    ${i["LAN IP"]}    ${i["LAN MASK"]}
+    \    run key word if    '${i["WAN PORT"]}' != ''    CLI-config-Test-WAN    ${i["WAN PORT"]}    ${i["WAN IP"]}    ${i["WAN MASK"]}
+    sleep    1
+    CLI-WAN-to-LAN Allow
+    ###ping gateway check####
+    CLI-config_wan_ip    ${data[0]["HOST_INTERFACE"]}    ${data[0]["HOST_IP"]}    ${data[0]["NETMASK"]}    ${data[0]["GATEWAY"]}
+    run keyword if    '${data[0]["HOST_INTERFACE"]}' != 'X1'    config_failover-lb_interface    ${data[0]["HOST_INTERFACE"]}
+    Close Connection
+    sleep    60
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    Write    ping ${data[0]["GATEWAY"]}
+    sleep    5
+    Read Until    is alive
+    CLI-logout
+    ###通过https完成firewall注册###
+    sleep    60
+    login_by_https_ex    ${data[0]["HOST_IP"]}    admin    password    firefox
+    sleep    5
+    Regist_FW_by_https    shsystem@163.com    sonicwall
+    sleep    1
+    Close Connection
+    LOG TO CONSOLE    Finish firewall config!
+    [Teardown]    close Browser
+
+bpstest
+    [Arguments]    ${type}
+    breakingpoint.Login
+    ###生成一个csv文件保存测试结果####
+    ${tm}    get_current_date
+    ${time}    evaluate    '${tm}'.replace(' ','-')
+    ${time}    evaluate    '${time}'.replace(':','-')
+    ${time}    evaluate    '${time}'.split('.')[0]
+    ${excel_name}    set Variable    ${type}_UTMResult_${time}
+    ${path}    evaluate    '${type}'+'_HTTP'+'-'+'${version}'+'-Time'+'${time}'
+    ${location1}    evaluate    '${location}'+'/'+'${path}'
+    Create Folder    ${location1}
+    Create UTM ReportFile    ${location1}    ${excel_name}.xls
+    ###从服务器上传配置文件到bp####
+    ${type1}    evaluate    '${type}'.replace('-','')
+    uploadBPT    //10.190.202.40/Shanghai QA/SystemTest/Perf2/BPS_HTTPThroughput/${type1}_HTTP_Throughput.bpt    force=true
+    ###遍历各种情况UTM吞吐量###
+    run keyword if    ${test_control["UTM_OFF"]} == 1    UTM_OFF_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${test_control["IPS_Max_Security"]} == 1    IPS_Max_Security_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${test_control["IPS_Perf_Optimized"]} == 1    IPS_Perf_Optimized_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${test_control["GAV_Max_Security"]} == 1    GAV_Max_Security_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${test_control["GAV_Perf_Optimized"]} == 1    GAV_Perf_Optimized_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${test_control["Anti_Spy_MaxSec"]} == 1    Anti_Spy_MaxSec_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${test_control["Anti_Spy_PerfOpt"]} == 1    Anti_Spy_PerfOpt_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${test_control["All_Max_Security"]} == 1    All_Max_Security_Test    ${type}    ${location1}    ${excel_name}.xls
+    run keyword if    ${test_control["All_ Perf_Optimized"]} == 1    All_ Perf_Optimized_Test    ${type}    ${location1}    ${excel_name}.xls
+    Logout
+
+UTM_OFF_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config SPI enable####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-SPI-Connections    200
+    Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with UTM_OFF
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${type}    evaluate    '${type}'.replace('-','')
+    ${run_id}    RunTest    modelname=${type}_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    ReservePort Fail！
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_UTM_OFF_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    run keyword if    '${type}' == '9200' or '${type}' == '9400' or '${type}' == '9600' or '${type}' == '9800' or '${type}' == '6600' or '${type}' == '6650' or '${type}' == '9250' or '${type}' == '9450' or '${type}' == '9650'    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    ...    ELSE    Get UTMResult 2ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    0    ${throughout}
+    log to console    UTM_OFF_Test finish!
+
+IPS_Max_Security_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config IPS_Max_Security####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    200
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-security maximum
+    CLI-Enable-IPS
+    Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with IPS_Max
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${type}    evaluate    '${type}'.replace('-','')
+    ${run_id}    RunTest    modelname=${type}_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    ReservePort Fail！
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_IPS_Max_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    run keyword if    '${type}' == '9200' or '${type}' == '9400' or '${type}' == '9600' or '${type}' == '9800' or '${type}' == '6600' or '${type}' == '6650' or '${type}' == '9250' or '${type}' == '9450' or '${type}' == '9650'    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    ...    ELSE    Get UTMResult 2ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    1    ${throughout}
+    log to console    IPS_Max_Security_Test finish!
+    ###IPS disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-IPS
+    Close Connection
+
+IPS_Perf_Optimized_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config IPS_Max_Security####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    200
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Performance Optimized
+    CLI-Enable-IPS
+    Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with IPS_Perf_Optimized
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${type}    evaluate    '${type}'.replace('-','')
+    ${run_id}    RunTest    modelname=${type}_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    ReservePort Fail！
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_IPS_Perf_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    run keyword if    '${type}' == '9200' or '${type}' == '9400' or '${type}' == '9600' or '${type}' == '9800' or '${type}' == '6600' or '${type}' == '6650' or '${type}' == '9250' or '${type}' == '9450' or '${type}' == '9650'    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    ...    ELSE    Get UTMResult 2ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    2    ${throughout}
+    log to console    IPS_Perf_Optimized_Test finish!
+    ###IPS disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-IPS
+    Close Connection
+
+GAV_Max_Security_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config IPS_Max_Security####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    200
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-security maximum
+    CLI-Enable-GAV
+    Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with GAV_Max_Security
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${type}    evaluate    '${type}'.replace('-','')
+    ${run_id}    RunTest    modelname=${type}_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    ReservePort Fail！
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_GAV_Max_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    run keyword if    '${type}' == '9200' or '${type}' == '9400' or '${type}' == '9600' or '${type}' == '9800' or '${type}' == '6600' or '${type}' == '6650' or '${type}' == '9250' or '${type}' == '9450' or '${type}' == '9650'    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    ...    ELSE    Get UTMResult 2ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    3    ${throughout}
+    log to console    GAV_Max_Security_Test finish!
+    ###GAV disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-GAV
+    Close Connection
+
+GAV_Perf_Optimized_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config IPS_Max_Security####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    200
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Performance Optimized
+    CLI-Enable-GAV
+    Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with GAV_Perf_Optimized
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${type}    evaluate    '${type}'.replace('-','')
+    ${run_id}    RunTest    modelname=${type}_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    ReservePort Fail！
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_GAV_Perf_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    run keyword if    '${type}' == '9200' or '${type}' == '9400' or '${type}' == '9600' or '${type}' == '9800' or '${type}' == '6600' or '${type}' == '6650' or '${type}' == '9250' or '${type}' == '9450' or '${type}' == '9650'    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    ...    ELSE    Get UTMResult 2ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    4    ${throughout}
+    log to console    GAV_Perf_Optimized_Test finish!
+    ###GAV disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-GAV
+    Close Connection
+
+Anti_Spy_MaxSec_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config IPS_Max_Security####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    200
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-security maximum
+    CLI-Enable-AntiSpyware
+    Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with Anti_Spy_MaxSec
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${type}    evaluate    '${type}'.replace('-','')
+    ${run_id}    RunTest    modelname=${type}_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    ReservePort Fail！
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_Anti_Spy_max_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    run keyword if    '${type}' == '9200' or '${type}' == '9400' or '${type}' == '9600' or '${type}' == '9800' or '${type}' == '6600' or '${type}' == '6650' or '${type}' == '9250' or '${type}' == '9450' or '${type}' == '9650'    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    ...    ELSE    Get UTMResult 2ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    5    ${throughout}
+    log to console    Anti_Spy_MaxSec_Test finish!
+    ###GAV disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-AntiSpyware
+    Close Connection
+
+Anti_Spy_PerfOpt_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config IPS_Max_Security####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    200
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Performance Optimized
+    CLI-Enable-AntiSpyware
+    Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with Anti_Spy_PerfOpt
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${type}    evaluate    '${type}'.replace('-','')
+    ${run_id}    RunTest    modelname=${type}_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    ReservePort Fail！
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_Anti_Spy_Perf_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    run keyword if    '${type}' == '9200' or '${type}' == '9400' or '${type}' == '9600' or '${type}' == '9800' or '${type}' == '6600' or '${type}' == '6650' or '${type}' == '9250' or '${type}' == '9450' or '${type}' == '9650'    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    ...    ELSE    Get UTMResult 2ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    6    ${throughout}
+    log to console    Anti_Spy_PerfOpt_Test finish!
+    ###GAV disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-AntiSpyware
+    Close Connection
+
+All_Max_Security_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config IPS_Max_Security####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    200
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-security maximum
+    CLI-Enable-IPS
+    CLI-Enable-GAV
+    CLI-Enable-AntiSpyware
+    Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with All_Max_Security
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${type}    evaluate    '${type}'.replace('-','')
+    ${run_id}    RunTest    modelname=${type}_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    ReservePort Fail！
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_All_Max_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    run keyword if    '${type}' == '9200' or '${type}' == '9400' or '${type}' == '9600' or '${type}' == '9800' or '${type}' == '6600' or '${type}' == '6650' or '${type}' == '9250' or '${type}' == '9450' or '${type}' == '9650'    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    ...    ELSE    Get UTMResult 2ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    7    ${throughout}
+    log to console    All_Max_Security_Test finish!
+    ###GAV disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-IPS
+    CLI-Disable-GAV
+    CLI-Disable-AntiSpyware
+    Close Connection
+
+All_ Perf_Optimized_Test
+    [Arguments]    ${type}    ${location1}    ${filename}
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config IPS_Max_Security####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    200
+    Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Performance Optimized
+    CLI-Enable-IPS
+    CLI-Enable-GAV
+    CLI-Enable-AntiSpyware
+    Close Connection
+    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    log to console    start test UTM throughout for ${type} with All_ Perf_Optimized
+    ${using_groupid}=    Get Groupid
+    ${i}    evaluate    '${group}' in ${using_groupid}
+    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    log to console    Use group:${group}
+    ###占用端口###
+    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    ###使用已有的配置文件，开始测试###
+    sleep    5
+    ${type}    evaluate    '${type}'.replace('-','')
+    ${run_id}    RunTest    modelname=${type}_HTTP_Throughput    group=${group}
+    Run Keyword IF    '${run_id}' == '-1'    FAIL    ReservePort Fail！
+    ###run test case###
+    check test status    ${run_id}
+    ###get the report,以系统执行时间命名###
+    ${tm1}    get_current_date
+    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    ${time1}    evaluate    '${time1}'.replace(':','-')
+    ${time1}    evaluate    '${time1}'.split('.')[0]
+    ${reportname}    set Variable    ${type}_All_ Perf_${time1}
+    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    sleep    10
+    ${result}=    GetTestResult    ${run_id}
+    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    ###unreserver ports###
+    Unreserve Ports    slot=${slot}    portList=@{portList}
+    sleep    5
+    ###report 转换为excel格式并分析###
+    csv to xlsx    ${location1}    ${reportname}
+    ${throughout}    run keyword if    '${type}' == '9200' or '${type}' == '9400' or '${type}' == '9600' or '${type}' == '9800' or '${type}' == '6600' or '${type}' == '6650' or '${type}' == '9250' or '${type}' == '9450' or '${type}' == '9650'    Get UTMResult 4ports    ${location1}    ${reportname}.xlsx
+    ...    ELSE    Get UTMResult 2ports    ${location1}    ${reportname}.xlsx
+    write to xlsFile    ${location1}    ${filename}    1    8    ${throughout}
+    log to console    All_ Perf_Optimized finish!
+    ###GAV disable###
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Disable-IPS
+    CLI-Disable-GAV
+    CLI-Disable-AntiSpyware
+    Close Connection
+
+UTMThroughputTestCase
+    [Arguments]    ${type}
+    config switch    ${type}
+    download version    ${type}
+    config firewall    ${type}
+    bpstest    ${type}

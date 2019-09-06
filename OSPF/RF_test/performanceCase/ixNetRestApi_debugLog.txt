@@ -1,0 +1,197 @@
+Date: <bound method Connect.getDate of <IxNetRestApi.Connect instance at 0x03660C38>>
+Time: <bound method Connect.getTime of <IxNetRestApi.Connect instance at 0x03660C38>>
+
+
+16:14:25.687000: 
+Verifying API server connection: http://localhost:11009/api/v1/sessions/1/ixnetwork
+
+16:14:26.694000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+16:14:27.737000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/availableHardware/chassis
+	DATA: {"hostname": "10.7.1.234"}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 201
+
+
+connectIxChassis 10.7.1.234: Status: polling. Wait 1/30 seconds
+connectIxChassis 10.7.1.234: Status: polling. Wait 2/30 seconds
+connectIxChassis 10.7.1.234: Status: ready. Wait 3/30 seconds
+
+16:14:36.298000: Verify if ports are currently owned
+
+16:14:36.299000: Querying for 10.7.1.234/4/13
+
+16:14:36.299000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/operations/query
+	DATA: {"selects": [{"nodes": [{"node": "chassis", "where": [{"regex": "10.7.1.234", "property": "ip"}], "properties": ["ip"]}, {"node": "card", "where": [{"regex": "4", "property": "cardId"}], "properties": ["cardId"]}, {"node": "port", "where": [{"regex": "13", "property": "portId"}], "properties": ["portId", "owner"]}], "from": "/availableHardware"}]}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+waitForComplete:
+	State: SUCCESS 
+
+16:14:37.621000: Port currently owned by: 
+
+16:14:37.621000: Querying for 10.7.1.234/4/14
+
+16:14:37.622000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/operations/query
+	DATA: {"selects": [{"nodes": [{"node": "chassis", "where": [{"regex": "10.7.1.234", "property": "ip"}], "properties": ["ip"]}, {"node": "card", "where": [{"regex": "4", "property": "cardId"}], "properties": ["cardId"]}, {"node": "port", "where": [{"regex": "14", "property": "portId"}], "properties": ["portId", "owner"]}], "from": "/availableHardware"}]}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+waitForComplete:
+	State: SUCCESS 
+
+16:14:38.670000: Port currently owned by: 
+
+16:14:38.671000: Ports are still owned: []
+
+16:14:38.681000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/vport
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+16:14:40.508000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/vport
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+16:14:41.524000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/vport/operations/releaseport
+	DATA: {"arg1": []}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+waitForComplete:
+	State: SUCCESS 
+
+16:14:42.587000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/availableHardware/chassis
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+16:14:43.599000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/availableHardware/chassis/1/card/4/port/13/operations/clearownership
+	DATA: {"arg1": ["/api/v1/sessions/1/ixnetwork/availableHardware/chassis/1/card/4/port/13"]}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+16:14:44.857000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/availableHardware/chassis/1/card/4/port/14/operations/clearownership
+	DATA: {"arg1": ["/api/v1/sessions/1/ixnetwork/availableHardware/chassis/1/card/4/port/14"]}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+16:14:46.165000: Reading saved config file
+
+16:14:46.172000: Uploading file to server: http://localhost:11009/api/v1/sessions/1/ixnetwork/files?filename=9450-ospf-max-route-traffcis.json
+
+16:14:46.173000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/files?filename=9450-ospf-max-route-traffcis.json
+	DATA: <StringIO.StringIO instance at 0x038CEAD0>
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 201
+
+16:14:47.387000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/resourceManager/operations/importconfigfile
+	DATA: {"arg1": "/api/v1/sessions/1/ixnetwork/resourceManager", "arg2": "/api/v1/sessions/1/ixnetwork/files/9450-ospf-max-route-traffcis.json", "arg3": true}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+waitForComplete:
+	State: IN_PROGRESS 
+	State: IN_PROGRESS: Wait 1/300 seconds
+	State: IN_PROGRESS: Wait 2/300 seconds
+	State: IN_PROGRESS: Wait 3/300 seconds
+	State: IN_PROGRESS: Wait 4/300 seconds
+	State: IN_PROGRESS: Wait 5/300 seconds
+	State: IN_PROGRESS: Wait 6/300 seconds
+	State: IN_PROGRESS: Wait 7/300 seconds
+	State: IN_PROGRESS: Wait 8/300 seconds
+	State: IN_PROGRESS: Wait 9/300 seconds
+	State: IN_PROGRESS: Wait 10/300 seconds
+	State: IN_PROGRESS: Wait 11/300 seconds
+	State: IN_PROGRESS: Wait 12/300 seconds
+	State: IN_PROGRESS: Wait 13/300 seconds
+	State: IN_PROGRESS: Wait 14/300 seconds
+	State: IN_PROGRESS: Wait 15/300 seconds
+	State: IN_PROGRESS: Wait 16/300 seconds
+	State: IN_PROGRESS: Wait 17/300 seconds
+	State: IN_PROGRESS: Wait 18/300 seconds
+	State: IN_PROGRESS: Wait 19/300 seconds
+	State: IN_PROGRESS: Wait 20/300 seconds
+	State: IN_PROGRESS: Wait 21/300 seconds
+	State: IN_PROGRESS: Wait 22/300 seconds
+	State: IN_PROGRESS: Wait 23/300 seconds
+	State: IN_PROGRESS: Wait 24/300 seconds
+	State: IN_PROGRESS: Wait 25/300 seconds
+	State: IN_PROGRESS: Wait 26/300 seconds
+	State: IN_PROGRESS: Wait 27/300 seconds
+	State: IN_PROGRESS: Wait 28/300 seconds
+	State: IN_PROGRESS: Wait 29/300 seconds
+	State: IN_PROGRESS: Wait 30/300 seconds
+	State: IN_PROGRESS: Wait 31/300 seconds
+	State: IN_PROGRESS: Wait 32/300 seconds
+	State: IN_PROGRESS: Wait 33/300 seconds
+	State: IN_PROGRESS: Wait 34/300 seconds
+	State: IN_PROGRESS: Wait 35/300 seconds
+	State: SUCCESS
+
+16:16:10.114000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/operations/startallprotocols
+	DATA: {}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+waitForComplete:
+	State: SUCCESS 
+
+16:16:12.822000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/operations/query
+	DATA: {"selects": [{"nodes": [{"node": "topology", "where": [], "properties": []}, {"node": "deviceGroup", "where": [], "properties": ["href", "enabled"]}, {"node": "deviceGroup", "where": [], "properties": ["href", "enabled"]}], "from": "/"}]}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+waitForComplete:
+	State: SUCCESS 
+
+16:16:43.919000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/traffic/trafficItem
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+16:16:45.332000: Regenerating traffic items: ['/api/v1/sessions/1/ixnetwork/traffic/trafficItem/1']
+
+16:16:45.333000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/traffic/trafficItem/operations/generate
+	DATA: {"arg1": ["/api/v1/sessions/1/ixnetwork/traffic/trafficItem/1"]}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+waitForComplete:
+	State: SUCCESS 
+
+16:16:47.496000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/traffic/operations/apply
+	DATA: {"arg1": "/api/v1/sessions/1/ixnetwork/traffic"}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+waitForComplete:
+	State: IN_PROGRESS 
+	State: IN_PROGRESS: Wait 1/90 seconds
+	State: SUCCESS
+
+16:16:57.634000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/traffic/operations/start
+	DATA: {"arg1": "http://localhost:11009/api/v1/sessions/1/ixnetwork/traffic"}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+waitForComplete:
+	State: SUCCESS 

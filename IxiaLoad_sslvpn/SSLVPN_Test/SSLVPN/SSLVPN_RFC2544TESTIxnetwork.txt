@@ -1,0 +1,267 @@
+*** Settings ***
+Library           Telnet
+Library           DateTime
+Library           Collections
+Resource          ../keyword/keyword.txt
+Library           Collections
+Library           IxNetRestApi.Connect    ${apiServerIp}    ${apiServerPort}    ${apiServerOs}    robotFrameworkStdout=True    WITH NAME    ixnObj
+...               # Must add the ../../Modules path to PYTHONPATH.
+Library           IxNetRestApiPortMgmt.PortMgmt    WITH NAME    portMgmtObj
+Library           IxNetRestApiFileMgmt.FileMgmt    WITH NAME    fileMgmtObj
+Library           IxNetRestApiTraffic.Traffic    WITH NAME    trafficObj
+Library           IxNetRestApiProtocol.Protocol    WITH NAME    protocolObj
+Library           IxNetRestApiStatistics.Statistics    WITH NAME    statisticObj
+Library           IxNetRestApiQuickTest.QuickTest    WITH NAME    quickTestObj
+Library           Selenium2Library
+Library           Sonicwall
+Library           SSHLibrary
+
+*** Variables ***
+@{equipment_type}    TZ-600    # 待测试设备类型，如：3650，3600，3600, 9200，9600等。列表形式，顺序执行
+${slot}           4    # bp端口槽位号
+@{portList}       ${port_1_1}    ${port_1_2}    # 使用的bp端口${port_1_1}${port_2_1}${port_3_1}${port_4_1}
+${group}          2    # 使用bp端口的group id，范围1-12
+@{frameSize}      1518    # 测试包长
+${location}       C:\\RFC2544Result    # 测试报告保存地址，注意是斜杠方向”/"
+${ftp_username}    admin    # ftp 用户名
+${ftp_password}    admin    # ftp密码
+${ftpServer_ip}    10.7.3.245    # ftp服务器ip
+${version}        6.5.4.3-32n    # 待测试版本号,格式如：6.5.1.0-32n，6.5.2.0-12n。。ftp服务器上需要设置\\10.190.202.40\FIRMWARE\NG 为ftp下载根目录.
+${apiServerIp}    localhost
+${apiServerPort}    11009
+${apiServerOs}    windows
+${forceTakePortOwnership}    True
+${releasePortsWhenDone}    False
+${deleteSessionAfterTest}    True
+${licenseServerIp}    192.168.70.3
+${licenseModel}    subscription
+${licenseTier}    tier3
+${ixChassisIp}    10.7.1.234
+@{port_1_1}       ${ixChassisIp}    2    11
+@{port_1_2}       ${ixChassisIp}    2    12
+@{port_1_3}       ${ixChassisIp}    4    15
+@{port_1_4}       ${ixChassisIp}    4    16
+${location1}      C:/IxiaLoad_sslvpn/SSLVPN_Results
+@{Email_receiver}    luli@sonicwall.com
+@{portList1}      11    12    15    16    # 1,2,11,12
+${jsonConfigFilePath}    C:/IxiaLoad_sslvpn/SSLVPN_Conf/    # C:/9400RF2544Test.json
+@{port1}          2    11
+@{port2}          2    12
+
+*** Test Cases ***
+RunCase
+    [Tags]    performance
+    [Template]    RFC2544TestCase
+    : FOR    ${item}    IN    @{equipment_type}
+    \    ${item}
+
+123
+    ${type}    set Variable    TZ-600
+    log to console    Loading JSON config file to API server
+    ${jsonfile}    set Variable    ${type}_SSLVPN_RFC2544_FrameSize1240.json
+    ${jsonConfigFile1}    set Variable    ${jsonConfigFilePath}${jsonfile}
+    log to console    ${jsonConfigFile1}
+    ${newConfig}    Evaluate    str('newConfig')
+    ${jsonData} =    fileMgmtObj.Json Read Config    ${jsonConfigFile1}
+    Log To Console    Loading JSON config file to API server
+    ${newConfig}    Evaluate    str('newConfig')
+    fileMgmtObj.Import Json Config File    ${jsonConfigFile1}    option=${newConfig}
+
+*** Keywords ***
+config switch
+    [Arguments]    ${type}
+    #清除S6000-1,S6000-2，S3148交换机中待测盒子残留配置
+    @{data}=    read xls file    topology.xlsx    ${type}
+    : FOR    ${i}    IN    @{data}
+    \    ${vlan}    evaluate    int(${i["VLAN"]})
+    \    Clear_remaining_configuration_Swithch    ${data[0]["SWITCH_IP"]}    ${data[0]["S6000-2_IP"]}    ${data[0]["S3148_IP"]}    ${vlan}
+    #选择IXIA Slot4(4/11~4/14)的测试端口，需要跨S6000-2配置
+    ${slot}    set Variable    ${port_1_1[1]}
+    Connect S6000-1 with S6000-2    ${data[0]["SWITCH_IP"]}    ${data[0]["S6000-2_IP"]}    @{data}
+    ####
+    ${slot}    set Variable    ${port_1_1[1]}
+    @{portList}    create list
+    append to list    ${portList}    ${port_1_1[2]}    ${port_1_2[2]}
+    ###获取IXIA在交换机Perf-S6000上对应的端口列表###
+    @{data1}=    read xls file    topology.xlsx    BP-TO-SWITCH
+    @{SwitchPorList}    create list
+    : FOR    ${i}    IN    @{portList}
+    \    ${i}    evaluate    int(${i})
+    \    ${ports}    Get bp-to-switchportslist    ${slot}    ${i}    @{data1}
+    \    append to list    ${SwitchPorList}    ${ports}
+    Log Many    @{SwitchPorList}
+    ###telnet登陆交换机###
+    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == '2600' or '${type}' == '2650' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P' or '${type}' == 'SOHO-250' or '${type}' == 'SOHOW'    Telnet-login-switch    ${data[0]["S3148_IP"]}
+    ...    ELSE    Telnet-login-switch    ${data[0]["SWITCH_IP"]}
+    ###配置untag Port###
+    log to console    config untag ports
+    : FOR    ${i}    IN    @{data}
+    \    config_port_switchport    ${i["UNTAG"]}
+    \    ${vlan}    evaluate    int(${i["VLAN"]})
+    \    ${result}    tel    do show interfaces switchport ${i["UNTAG"]}
+    \    ${nativlan_id}    get_native_vlan    ${result}    U\\s+(\\d+)
+    \    run keyword if    '${nativlan_id}' == '${vlan}'    log    the port has already configed
+    \    ...    ELSE IF    '${nativlan_id}' == '1'    config_native_vlan    ${i["UNTAG"]}    ${vlan}
+    \    ...    ELSE    change_native_vlan    ${i["UNTAG"]}    ${nativlan_id}    ${vlan}
+    Telnet.Close Connection
+    #tag IxLoad对应的交换机端口
+    log to console    config tag ports
+    Telnet-login-switch    ${data[0]["SWITCH_IP"]}
+    : FOR    ${j}    IN    @{SwitchPorList}
+    \    config_port_switchport    ${j}
+    \    ${vlan}    evaluate    int(${data[0]["VLAN"]})
+    \    config_tag_port    ${j}    ${vlan}
+    \    config_tag_port    ${j}    4001
+    Telnet.Close Connection
+    ###配置S6000与S3148之间的连接###
+    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == '2600' or '${type}' == '2650' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P' or '${type}' == 'SOHO-250' or '${type}' == 'SOHOW'    Connect S6000 with S3148    ${data[0]["SWITCH_IP"]}    ${data[0]["S3148_IP"]}    @{data}
+    ###配置S6000-2###
+    config S6000-2    ${type}
+
+download version
+    [Arguments]    ${type}
+    ###串口登陆，ftp下载版本###
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    log to console    start download version for ${type}
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    ${mgmtport}    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P' or '${type}' == 'SOHO-250' or '${type}' == 'SOHOW'    set Variable    X2
+    ...    ELSE    set Variable    X1
+    CLI-config_wan_ip    ${mgmtport}    ${data[0]["HOST_IP"]}    ${data[0]["NETMASK"]}    ${data[0]["GATEWAY"]}
+    ###ping gateway check####
+    Telnet.Write    ping ${data[0]["GATEWAY"]}
+    sleep    5
+    Telnet.Read Until    is alive
+    sleep    1
+    ###download###
+    ${filename}=    run key word if    '${type}'=='9800'    Get 9800match Filename    ${reference_device_version}    ${type}
+    ...    ELSE    Get Match Filename    ${version}    ${type}
+    #对TZ系列来说，300s等待时间不够, 设置12分钟
+    ${rbtime}    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P' or '${type}' == 'SOHO-250' or '${type}' == 'SOHOW'    set Variable    720
+    ...    ELSE    set Variable    300
+    download firewall version and reboot with factory-default    ${ftp_username}    ${ftp_password}    ${ftpServer_ip}    ${filename}    ${rbtime}
+    log to console    finish download version for ${type}
+    Telnet.Close Connection
+    [Teardown]
+
+config firewall
+    [Arguments]    ${type}
+    ###获取盒子相关数据##
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    ###串口下完成测试相关配置####
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    #
+    ${mgmtport}    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P' or '${type}' == 'SOHO-250' or '${type}' == 'SOHOW'    set Variable    X2
+    ...    ELSE    set Variable    X1
+    log    ${mgmtport}
+    CLI-config_wan_ip    ${mgmtport}    ${data[0]["HOST_IP"]}    ${data[0]["NETMASK"]}    ${data[0]["GATEWAY"]}
+    Telnet.Close Connection
+    sleep    60
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    : FOR    ${i}    IN    @{data}
+    \    run key word if    '${i["WAN PORT"]}' != ''    CLI-config-Test-WAN    ${i["WAN PORT"]}    ${i["WAN IP"]}    ${i["WAN MASK"]}
+    \    run key word if    '${i["LAN PORT"]}' != ''    CLI-config-Test-LAN    ${i["LAN PORT"]}    ${i["LAN IP"]}    ${i["LAN MASK"]}
+    sleep    1
+    ###ping gateway check####
+    Telnet.Write    ping ${data[0]["GATEWAY"]}
+    sleep    5
+    Telnet.Read Until    is alive
+    Telnet.Write    exit
+    Telnet.Close Connection
+    ###通过https完成firewall注册###
+    sleep    5
+    login_by_https    ${data[0]["HOST_IP"]}    admin    password    firefox
+    sleep    10
+    Regist_FW_by_https    shsystem@163.com    sonicwall
+    sleep    3
+    close browser
+    LOG TO CONSOLE    Finish firewall config!
+    [Teardown]    close Browser
+
+conf_SSLVPN
+    [Arguments]    ${type}    ${num}
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-SPI-Connections    300
+    CLI-Disable-IPS-GAV-AntiS
+    Telnet.Close Connection
+    ###Config sslvpn and create \ \ NAT###
+    config sslvpn    ${type}
+    run sslvpn    ${type}    ${num}
+
+Ixnettest
+    [Arguments]    ${type}    ${num}
+    # Extending the main ${ixnObj} object to all the instantiated classes
+    ${ixnObj} =    ixnObj.getSelfObject
+    portMgmtObj.setMainObject    ${ixnObj}
+    fileMgmtObj.setMainObject    ${ixnObj}
+    protocolObj.setMainObject    ${ixnObj}
+    quickTestObj.setMainObject    ${ixnObj}
+    Log To Console    Connecting to chassis ...
+    ###生成一个文件夹以及csv文件保存测试结果####
+    ${tm}    get_current_date
+    ${time}    evaluate    '${tm}'.replace(' ','-')
+    ${time}    evaluate    '${time}'.replace(':','-')
+    ${time}    evaluate    '${time}'.split('.')[0]
+    ${csv_name}    set Variable    ${type}_RFC2544Result_${time}
+    ${path}    evaluate    '${type}'+'_RFC2544'+'-'+'${version}'+'-Time'+'${time}'
+    ${location2}    evaluate    '${location1}'+'/'+'${path}'
+    Create Folder    ${location2}
+    Create RFC2544 ReportFile    ${location2}    ${csv_name}.csv
+    ${location4}    getcurrdir    ${location2}
+    Log    ${location4}
+    portMgmtObj.Connect Ix Chassis    ${ixChassisIp}
+    # Verify if ports are available. Take over if forceTakePortOwnership == True
+    ${result} =    portMgmtObj.Are Ports Available    portList=${portList}    raiseException=${False}
+    Run Keyword If    ("${result}"!=0) and ("${forceTakePortOwnership}"=="True")    Run Keywords    portMgmtObj.Release Ports    ${portList}
+    ...    AND    portMgmtObj.Clear Port Ownership    ${portList}
+    ...    ELSE    Fail    Ports are still owned
+    ###从服务器上传配置文件到bp####
+    log to console    Loading JSON config file to API server
+    ${jsonfile}    set Variable    ${type}_SSLVPN_RFC2544_FrameSize1240.json
+    ${jsonConfigFile1}    set Variable    ${jsonConfigFilePath}${jsonfile}
+    log to console    ${jsonConfigFile1}
+    ${newConfig}    Evaluate    str('newConfig')
+    ${jsonData} =    fileMgmtObj.Json Read Config    ${jsonConfigFile1}
+    Log To Console    Loading JSON config file to API server
+    ${newConfig}    Evaluate    str('newConfig')
+    fileMgmtObj.Import Json Config File    ${jsonConfigFile1}    option=${newConfig}
+    Log To Console    Assigning ports
+    portMgmtObj.Assign Ports    portList=${portList}
+    ${handles}=    getAllQuickTestHandles
+    log    ${handles}
+    ${names}=    getAllQuickTestNames
+    ${handel}=    getQuickTestHandleByName    RFC2544_X16-X17-X18-X19
+    LOG    ${handel}
+    Start Quick Test    ${handel}
+    sleep    10
+    ForIxnetwork    ${handel}
+    ${testResult}=    getQuickTestCurrentAction    ${handel}
+    Run Keyword IF    '${testResult}' == 'TestEnded'    Log To Console    Test Finished!
+    ...    ELSE    FAIL    Test Failed!
+    ${resultPath}=    getQuickTestResultPath    ${handel}
+    ${resultAgg}=    getQuickTestCsvFiles    ${handel}    ${location4}    AggregateResults.csv
+    LOG    ${handel}
+    sleep    5
+    LOG    ${resultAgg}
+    portMgmtObj.Release Ports    ${portList}
+    portMgmtObj.Clear Port Ownership    ${portList}
+    sleep    10
+    csv to xlsx    ${location4}    AggregateResults
+    @{list}    get_IxnetworkResult    ${location4}    AggregateResults.xlsx    1240
+    Write To CsvFile    ${location4}    ${csv_name}    ${list[0]}    ${list[1]}    ${list[2]}    ${list[3]}
+    log to console    finish test RFC2544 for Ixnetwork
+    ${location3}    evaluate    '${location2}'+'/'+'${csv_name}.csv'
+    @{csv_data}=    read csv file    ${location3}
+    sendEmail_RFC2544    ${time}    ${version}    ${type}    mail_receiver=@{Email_receiver}    csv_data=@{csv_data}
+
+RFC2544TestCase
+    [Arguments]    ${type}
+    Comment    config switch    ${type}
+    Comment    download version    ${type}
+    sleep    300
+    Comment    config firewall    ${type}
+    conf_SSLVPN    ${type}    10
+    Ixnettest    ${type}    10

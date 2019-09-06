@@ -1,0 +1,37 @@
+Max Dynamic Routes,Default IPv4 Routes,Supported Dynamic Routes,Multicore
+8192,15,8206,"config(18B16989B780)# 
+config(18B16989B780)# diag show multicore
+MultiCore Utilization (%)
+Core  0:   3
+Core  1:  53
+Core  2:  14
+Core  3:  10
+Core  4:  10
+Core  5:   9
+Core  6:   9
+Core  7:   9
+Core  8:  57
+Core  9:  18
+Core 10:  10
+Core 11:  10
+Core 12:   9
+Core 13:   9
+Core 14:   9
+Core 15:   9
+Core 16:  66
+Core 17:  73
+Core 18:  66
+Core 19:  51
+Core 20:  19
+Core 21:  15
+Core 22:  14
+Core 23:  13
+Core 24:  72
+Core 25:  65
+Core 26:  49
+Core 27:  19
+Core 28:  15
+Core 29:  14
+Core 30:  13
+Core 31:  13
+config(18B16989B780)# "

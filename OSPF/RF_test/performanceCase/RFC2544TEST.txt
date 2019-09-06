@@ -1,0 +1,190 @@
+*** Settings ***
+Library           Telnet
+Library           DateTime
+Library           Sonicwall
+Library           breakingpoint    10.7.1.234    admin    admin
+Library           Collections
+Resource          ../keyword/keyword.txt
+
+*** Variables ***
+@{equipment_type}    4600    # 待测试设备类型，如：3650，3600，3600, 9200，9600等。列表形式，顺序执行
+${slot}           5    # bp端口槽位号
+@{portList}       0    1    2    3    # 使用的bp端口
+${group}          2    # 使用bp端口的group id，范围1-12
+@{frameSize}      68    128    256    512    1024    1280    1518
+...               # 测试包长
+${location}       d:/RF_test/report    # 测试报告保存地址，注意是斜杠方向”/"
+${ftp_username}    admin    # ftp 用户名
+${ftp_password}    admin    # ftp密码
+${ftpServer_ip}    10.103.18.254    # ftp服务器ip
+${version}        6.5.2.0-24n    # 待测试版本号,格式如：6.5.1.0-32n，6.5.2.0-12n。。ftp服务器上需要设置\\10.190.202.40\FIRMWARE\NG 为ftp下载根目录.
+
+*** Test Cases ***
+RunCase
+    [Tags]    performance
+    [Template]    RFC2544TestCase
+    : FOR    ${item}    IN    @{equipment_type}
+    \    ${item}
+
+*** Keywords ***
+config switch
+    [Arguments]    ${type}
+    ###telnet登陆交换机###
+    @{data}=    read xls file    topology.xlsx    ${type}
+    Telnet-login-switch    ${data[0]["SWITCH_IP"]}
+    ###获取bp在交换机上对应的端口列表###
+    @{data1}=    read xls file    topology.xlsx    BP-TO-SWITCH
+    @{SwitchPorList}    create list
+    : FOR    ${i}    IN    @{portList}
+    \    ${i}    evaluate    int(${i})
+    \    ${ports}    Get bp-to-switchportslist    ${slot}    ${i}    @{data1}
+    \    append to list    ${SwitchPorList}    ${ports}
+    Log Many    @{SwitchPorList}
+    ###配置untag Port###
+    log to console    config untag ports
+    : FOR    ${i}    IN    @{data}
+    \    config_port_switchport    ${i["UNTAG"]}
+    \    ${vlan}    evaluate    int(${i["VLAN"]})
+    \    write    no interface vlan ${vlan}
+    \    Read Until Prompt
+    \    ${result}    tel    do show interfaces switchport ${i["UNTAG"]}
+    \    ${nativlan_id}    get_native_vlan    ${result}    U\\s+(\\d+)
+    \    run keyword if    ${nativlan_id} == ${vlan}    log    the port has already configed
+    \    ...    ELSE IF    ${nativlan_id} == 1    config_native_vlan    ${i["UNTAG"]}    ${vlan}
+    \    ...    ELSE    change_native_vlan    ${i["UNTAG"]}    ${nativlan_id}    ${vlan}
+    ###配置tag Port####
+    log to console    config tag ports
+    : FOR    ${i}    ${j}    IN ZIP    ${data}    ${SwitchPorList}
+    \    ${vlan}    evaluate    int(${i["VLAN"]})
+    \    config_port_switchport    ${j}
+    \    config_tag_port    ${j}    ${vlan}
+    log to console    finish config switch!
+    Close Connection
+
+download version
+    [Arguments]    ${type}
+    ###串口登陆，ftp下载版本###
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    log to console    start download version for ${type}
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-config_wan_ip    X1    ${data[0]["HOST_IP"]}    ${data[0]["NETMASK"]}    ${data[0]["GATEWAY"]}
+    ${result}=    tel    show version
+    ###ping gateway check####
+    Write    ping ${data[0]["GATEWAY"]}
+    sleep    5
+    Read Until    is alive
+    sleep    1
+    ###download###
+    ${filename}=    Get Match Filename    ${version}    ${type}
+    Comment    ${path}    evaluate    '${version_path}'.split('/')[-1]
+    ${value}=    evaluate    '''${result}'''.find('${version}')
+    run key word if    ${value} == -1    download firewall version and reboot with factory-default    ${ftp_username}    ${ftp_password}    ${ftpServer_ip}    ${filename}
+    ...    240
+    ...    ELSE    boot current factory-default    240
+    log to console    finish download version for ${type}
+    Close Connection
+    [Teardown]
+
+config firewall
+    [Arguments]    ${type}
+    ###获取盒子相关数据##
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    ###串口下完成测试相关配置####
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    : FOR    ${i}    IN    @{data}
+    \    run key word if    '${i["LAN PORT"]}' != ''    CLI-config-Test-LAN    ${i["LAN PORT"]}    ${i["LAN IP"]}    ${i["LAN MASK"]}
+    \    run key word if    '${i["WAN PORT"]}' != ''    CLI-config-Test-WAN    ${i["WAN PORT"]}    ${i["WAN IP"]}    ${i["WAN MASK"]}
+    sleep    1
+    CLI-WAN-to-LAN Allow
+    ###ping gateway check####
+    CLI-config_wan_ip    X1    ${data[0]["HOST_IP"]}    ${data[0]["NETMASK"]}    ${data[0]["GATEWAY"]}
+    Close Connection
+    sleep    60
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    Write    ping ${data[0]["GATEWAY"]}
+    sleep    5
+    Read Until    is alive
+    ###config SPI enable####
+    CLI-MAX-SPI-Connections    240
+    Close Connection
+    LOG TO CONSOLE    Finish firewall config!
+    [Teardown]
+
+bpstest
+    [Arguments]    ${type}
+    breakingpoint.Login
+    ###生成一个文件夹以及csv文件保存测试结果####
+    ${tm}    get_current_date
+    ${time}    evaluate    '${tm}'.replace(' ','-')
+    ${time}    evaluate    '${time}'.replace(':','-')
+    ${time}    evaluate    '${time}'.split('.')[0]
+    ${csv_name}    set Variable    ${type}_RFC2544Result_${time}
+    Comment    ${path}    evaluate    '${version_path}'.split('/')[-1]
+    ${path}    evaluate    '${type}'+'_RFC2544'+'-'+'${version}'+'-Time'+'${time}'
+    ${location1}    evaluate    '${location}'+'/'+'${path}'
+    Create Folder    ${location1}
+    Create RFC2544 ReportFile    ${location1}    ${csv_name}.csv
+    ###telnet登陆交换机,clear mac dynamic###
+    @{data}=    read xls file    topology.xlsx    ${type}
+    Telnet-login-switch    ${data[0]["SWITCH_IP"]}
+    tel    exit
+    tel    clear mac dynamic all
+    Close Connection
+    ###从服务器上传配置文件到bp####
+    uploadBPT    //10.190.202.40/Shanghai QA/SystemTest/Perf2/BPS_UDP/${type}_RFC2544_Throughput.bpt    force=true
+    ###遍历各个字节，测试2544吞吐量###
+    : FOR    ${len}    IN    @{frameSize}
+    \    ###判断group id是否被使用，如果被使用，选择一个未被系统使用的group id###
+    \    log to console    start test RFC2544 for ${type} with framelength ${len}
+    \    ${using_groupid}=    Get Groupid
+    \    ${i}    evaluate    '${group}' in ${using_groupid}
+    \    Run Keyword If    ${i}    choose group id    ${using_groupid}
+    \    log to console    Use group:${group}
+    \    ###占用端口###
+    \    BP_ReservePorts    ${slot}    ${group}    @{portList}
+    \    ###修改配置文件中的发包size###
+    \    setNormalTest    NN_name=${type}_RFC2544_Throughput
+    \    run keyword if    '${type}' == '9200' or '${type}' == '9400' or '${type}' == '9600' or '${type}' == '9800' or '${type}' == '6600' or '${type}' == '6650' or '${type}' == '9250' or '${type}' == '9450' or '${type}' == '9650'    BpFileChangeFramelSize_4ports    ${len}
+    \    ...    ELSE    BpFileChangeFramelSize_2ports    ${len}
+    \    saveNormalTest    name=${type}_RFC2544_Throughput    force=true
+    \    ###使用修改字节后的配置文件，开始测试###
+    \    sleep    5
+    \    ${run_id}    RunTest    modelname=${type}_RFC2544_Throughput    group=${group}
+    \    Run Keyword IF    '${run_id}' == '-1'    FAIL    Run BP configuration file failed!!
+    \    ###run test case###
+    \    check test status    ${run_id}
+    \    ###get the report,以系统执行时间命名###
+    \    ${tm1}    get_current_date
+    \    ${time1}    evaluate    '${tm1}'.replace(' ','-')
+    \    ${time1}    evaluate    '${time1}'.replace(':','-')
+    \    ${time1}    evaluate    '${time1}'.split('.')[0]
+    \    ${reportname}    set Variable    ${type}_${len}Byte_${time1}
+    \    Comment    ${location1}    evaluate    '${location}''${run_id}'
+    \    sleep    10
+    \    ${result}=    GetTestResult    ${run_id}
+    \    ExportTestReport    testId=${run_id}    reportName=${reportname}.csv    location=${location1}
+    \    ###unreserver ports###
+    \    Unreserve Ports    slot=${slot}    portList=@{portList}
+    \    sleep    5
+    \    ###report 转换为excel格式并分析###
+    \    @{list}    set variable    0    0    0    0
+    \    csv to xlsx    ${location1}    ${reportname}
+    \    Comment    run keyword if    '${type}' == '9200' or '${type}' == '9400' or '${type}' == '9600' or '${type}' == '9800' or '${type}' == '6600' or '${type}' == '6650'    csv to xlsx    ${location}    ${reportname}
+    \    Comment    ...
+    \    ...    ELSE    csv to xls    ${location}    ${reportname}
+    \    @{list}    run keyword if    '${type}' == '9200' or '${type}' == '9400' or '${type}' == '9600' or '${type}' == '9800' or '${type}' == '6600' or '${type}' == '6650' or '${type}' == '9250' or '${type}' == '9450' or '${type}' == '9650' \ \ \ \    Get RFC2544Result 4ports    ${location1}    ${reportname}.xlsx
+    \    ...    ${len}
+    \    ...    ELSE    Get RFC2544Result 2ports    ${location1}    ${reportname}.xlsx    ${len}
+    \    Write To CsvFile    ${location1}    ${csv_name}    ${list[0]}    ${list[1]}    ${list[2]}
+    \    ...    ${list[3]}
+    \    log to console    finish test RFC2544 for ${type} with framelength ${len}
+    Logout
+
+RFC2544TestCase
+    [Arguments]    ${type}
+    config switch    ${type}
+    download version    ${type}
+    config firewall    ${type}
+    bpstest    ${type}

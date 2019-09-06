@@ -1,0 +1,844 @@
+*** Settings ***
+Library           Telnet
+Library           Sonicwall
+Library           Selenium2Library
+Library           Collections
+Library           IxNetRestApiFileMgmt.FileMgmt    WITH NAME    fileMgmtObj
+Library           IxNetRestApiPortMgmt.PortMgmt    WITH NAME    portMgmtObj
+
+*** Keywords ***
+tel
+    [Arguments]    ${command}    @{rest}
+    [Documentation]    telnet配置命令行 并返回回显.回显中如果有Error提示，返回执行失败。
+    ${rtn}    Execute Command Ex    ${command}    @{rest}
+    ${Error}    evaluate    '''${rtn}'''.find('Error')
+    run keyword if    ${Error} != -1    FAIL    命令行执行失败！！
+    [Return]    ${rtn}
+
+login_by_https
+    [Arguments]    ${ip}    ${username}    ${password}    ${webbrowser}
+    Open Browser    https://${ip}    ${webbrowser}
+    sleep    5
+    Select Frame    id=authFrm
+    Clear Element Text    id=userName
+    Input Text    id=userName    admin
+    Clear Element Text    name=pwd
+    Input Password    name=pwd    password
+    ${value}    Get Value    name=pwd
+    Click Button    name=Submit
+    sleep    10
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Page Should Contain    This appliance is not registered
+    run keyword if    '${result}' == 'PASS'    Click Element    id=regLaterButt
+    sleep    5
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Page Should Contain    OK to preempt existing administrator?
+    run keyword if    '${result}' == 'PASS'    Click Button    name=Continue
+    Comment    sleep    1
+    Comment    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Handle Alert    action=ACCEPT
+    sleep    10
+    #在部分版本中发现一次登录防火墙管理页面失败，脚本中加以规避，进行二次登录
+    Unselect Frame
+    ${curr_title}    get window titles
+    ${title}    Get From List    ${curr_title}    0
+    Select Window    title=${title}
+    ####
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Page Should Contain    Click here to log back in
+    run keyword if    '${result}' == 'PASS'    run keywords    Click Element    xpath=//*[@href="auth.html"]
+    ...    AND    log    Need TWO LOGIN
+    ...    AND    twoLogin \
+    ####
+    ${a}    Run Keyword And Return Status    Page Should Contain element    id=authFrm
+    log    ${a}
+    Run keyword if    '${a}'=='False'    run keywords    log    one login
+    ...    AND    select frame    name=toggleFrame
+    ...    ELSE    run keywords    log    Need TWO LOGIN
+    ...    AND    twoLogin
+
+Regist_FW_by_https
+    [Arguments]    ${email}    ${pwd}
+    Unselect Frame
+    Select Frame    id=logoFrame
+    Click Link    //*[@id='registerLink']
+    Unselect Frame
+    sleep    20
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Page Should Contain    MySonicWall username/email
+    : FOR    ${i}    IN RANGE    6
+    \    run keyword if    '${result}' == 'FAIL'    click registerLink
+    \    sleep    20
+    \    EXIT for loop if    '${result}' == 'PASS'
+    \    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Page Should Contain    MySonicWall username/email
+    Select Frame    id=tabFrame
+    Input Text    name=login    ${email}
+    sleep    3
+    Input Text    name=pwd    ${pwd}
+    sleep    3
+    Click Element    name=Submit
+    sleep    30
+    Capture Page Screenshot
+    Comment    Page Should Contain    Registration completed successfully
+
+click registerLink
+    Unselect Frame
+    Select Frame    id=logoFrame
+    Click Link    //*[@id='registerLink']
+    Unselect Frame
+
+login firewall
+    Telnet.Write    admin
+    sleep    3
+    Telnet.Read Until    Password:
+    Telnet.Write    password
+    sleep    1
+    Telnet.Write    \r
+    ######
+    Telnet.Set Prompt    >
+    Telnet.Read Until Prompt
+
+get_native_vlan
+    [Arguments]    ${result}    ${item}
+    ${result1}    ${pvid}    Should Match Regexp    ${result}    ${item}
+    [Return]    ${pvid}
+
+change_native_vlan
+    [Arguments]    ${port}    ${vlan1}    ${vlan2}
+    tel    interface vlan ${vlan1}
+    tel    no untag ${port}
+    tel    exit
+    tel    interface vlan ${vlan2}
+    tel    untag ${port}
+    tel    exit
+
+config_port_switchport
+    [Arguments]    ${port}
+    Telnet.write    interface ${port}
+    Telnet.write    switchport
+    Telnet.write    no shutdown
+    Telnet.write    exit
+
+config_native_vlan
+    [Arguments]    ${port}    ${vlan}
+    tel    interface vlan ${vlan}
+    tel    untag ${port}
+    Comment    tel    tag fo0/12
+    tel    no shutdown
+    tel    exit
+
+config_tag_port
+    [Arguments]    ${port}    ${vlan}
+    Telnet.write    interface vlan ${vlan}
+    sleep    1
+    Telnet.write    tag ${port}
+    sleep    1
+    Telnet.write    no shutdown
+    sleep    1
+    Telnet.write    exit
+
+exit_to_>
+    : FOR    ${i}    INRANGE    9
+    \    sleep    1
+    \    Telnet.Write    \r
+    \    sleep    1
+    \    ${rtn}    Telnet.read
+    \    ${a1}=    check_if_contain    ${rtn}    >
+    \    Comment    Run keyword if    ${a1} == 1    exit for loop
+    \    ...    ELSE    exit_to_User:
+    \    Run keyword if    ${a1} == 1    exit for loop
+    \    ...    ELSE    Telnet.Write    cancel
+
+CLI-login-firewall
+    [Arguments]    ${ip}    ${port}
+    [Documentation]    通过串口服务器登陆盒子串口，进入配置模式config(18B1698A2100)#
+    Telnet.Open Connection    ${ip}    port=${port}
+    Telnet.Login    root    123456
+    Telnet.Write    \r
+    sleep    8
+    ${rtn}    Telnet.read
+    ${a}=    check_if_contain    ${rtn}    ->
+    Run keyword if    ${a} == 1    write_exit_then_login
+    ${a}=    check_if_contain    ${rtn}    User:
+    Run keyword if    ${a} == 1    login firewall
+    ...    ELSE    exit_to_>
+    Telnet.Write    configure terminal
+    sleep    1
+    ${rtn}    Telnet.read
+    ${a}=    check_if_contain    ${rtn}    [no]:
+    Run keyword if    ${a} == 1    Telnet.Write    yes
+    ...    ELSE    sleep    1
+    Telnet.Set Prompt    \#
+    Telnet.Write    \r
+    Telnet.Read Until Prompt
+
+write_exit_then_login
+    Telnet.Write    exit
+    sleep    3
+    Telnet.Write    admin
+    sleep    3
+    Telnet.Read Until    Password:
+    Telnet.Write    password
+    sleep    1
+    Telnet.Set Prompt    >
+    Telnet.Read Until Prompt
+
+CLI-login-switch
+    [Arguments]    ${ip}    ${port}
+    [Documentation]    通过串口服务器登陆盒子串口，进入配置模式config(18B1698A2100)#
+    Telnet.Open Connection    ${ip}    port=${port}
+    Telnet.Login    root    123456
+    Telnet.Write    \r
+    sleep    5
+    ${rtn}    Telnet.read
+    log    ${rtn}
+    ${a}    check_if_contain    ${rtn}    Perf-S3148-1>
+    Run keyword if    ${a} == 1    Telnet.Write    enable
+    sleep    5
+    Telnet.Write    end
+    sleep    1
+    Telnet.read
+    Telnet.Set Prompt    \#
+    Telnet.Write    configure terminal
+    Telnet.Read Until Prompt
+
+Telnet-login-switch
+    [Arguments]    ${ip}
+    [Documentation]    通过串口服务器登陆盒子串口，进入配置模式config(18B1698A2100)#
+    Telnet.Open Connection    ${ip}    port=23
+    Telnet.Login    admin    password    login_prompt=Login:
+    Telnet.Set Prompt    \#
+    Telnet.write    configure terminal
+    Telnet.Read Until Prompt
+
+CLI-config_wan_ip
+    [Arguments]    ${port}    ${ip}    ${mask}    ${gateway}
+    [Documentation]    配置wan侧的ip地址，网关，使盒子可以网页访问
+    tel    interface ${port}
+    tel    ip-assignment WAN static
+    tel    ip ${ip} netmask ${mask}
+    tel    gateway ${gateway}
+    tel    dns primary 10.190.202.200
+    tel    commit
+    tel    exit
+    tel    management https
+    tel    management ping
+    tel    commit
+    tel    exit
+    # 对于TZ系列的盒子，已配置默认WAN为X2,因此需要删除原来系统默认WAN X1 并设置为rank 1，其他类型盒子默认仍为X1
+    tel    failover-lb
+    tel    group " Default LB Group"
+    tel    interface ${port}
+    tel    rank 1
+    tel    commit
+    tel    end
+
+CLI-Factory-Restore
+    [Arguments]    ${sleep_time}
+    [Documentation]    恢复出厂配置
+    Telnet.Write    restore-defaults
+    sleep    1
+    Telnet.Set Prompt    [cancel]:
+    sleep    1
+    Telnet.Read Until Prompt
+    Telnet.Write    yes
+    sleep    ${sleep_time}
+
+CLI-config-Test-LAN
+    [Arguments]    ${port}    ${ip}    ${mask}
+    tel    interface ${port}
+    tel    ip-assignment LAN static
+    tel    ip ${ip} netmask ${mask}
+    tel    commit
+    tel    exit
+    tel    management ping
+    tel    commit
+    tel    exit
+
+CLI-config-Test-WAN
+    [Arguments]    ${port}    ${ip}    ${mask}
+    tel    interface ${port}
+    tel    ip-assignment WAN static
+    tel    ip ${ip} netmask ${mask}
+    tel    commit
+    tel    exit
+    tel    management ping
+    tel    commit
+    tel    exit
+
+CLI-WAN-to-LAN Allow
+    tel    no access-rule from WAN to LAN action deny
+    tel    commit
+    tel    access-rule from WAN to LAN action allow
+    tel    commit
+    sleep    1
+    Comment    Telnet.Write    \ \r
+    Comment    sleep    1
+    tel    exit
+
+CLI-logout
+    Telnet.Write    exit
+    sleep    1
+    Telnet.Write    exit
+    sleep    1
+
+download firewall version and reboot with factory-default
+    [Arguments]    ${username}    ${password}    ${ip}    ${file}    ${time}
+    Telnet.Write    import firmware ftp ftp://${username}:${password}@${ip}/${file}
+    sleep    20
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Telnet.Read Until    uploaded successfully
+    : FOR    ${i}    IN RANGE    10
+    \    run keyword if    '${result}' == 'FAIL'    sleep    20
+    \    EXIT for loop if    '${result}' == 'PASS'
+    \    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Telnet.Read Until    uploaded successfully
+    run keyword if    '${result}' == 'FAIL'    FAIL    download version fail ,timeout!!
+    Comment    Telnet.Write    boot uploaded factory-default
+    Telnet.Write    boot uploaded factory-default
+    sleep    1
+    Telnet.Set Prompt    [cancel]:
+    sleep    1
+    Telnet.Read Until Prompt
+    Telnet.Write    yes
+    sleep    ${time}
+
+boot current factory-default
+    [Arguments]    ${time}
+    Telnet.Write    boot current factory-default
+    sleep    1
+    Telnet.Set Prompt    [cancel]:
+    sleep    1
+    Telnet.Read Until Prompt
+    Telnet.Write    yes
+    sleep    ${time}
+    log to console    same version ,no need download !
+
+config_failover-lb_interface
+    [Arguments]    ${interface}
+    tel    failover-lb
+    tel    group " Default LB Group"
+    tel    interface ${interface}
+    tel    rank 1
+    tel    commit
+    tel    exit
+    tel    no interface X1
+    tel    commit
+    tel    exit
+    tel    end
+
+write yes and sleep
+    [Arguments]    ${time}
+    Telnet.Write    yes
+    sleep    ${time}
+
+Get bp-to-switchportslist
+    [Arguments]    ${slot}    ${port}    @{excel}
+    : FOR    ${i}    IN    @{excel}
+    \    ${bpslot}    evaluate    int(${i["SLOT"]})
+    \    ${bpport}    evaluate    int(${i["PORT"]})
+    \    ${ports}    set variable if    ${bpslot} == ${slot} and ${bpport} == ${port}    ${i["SWITCH_PORT"]}
+    \    exit for loop if    ${bpslot} == ${slot} and ${bpport} == ${port}
+    [Return]    ${ports}
+
+ForIxnetwork
+    [Arguments]    ${handel}
+    : FOR    ${index}    IN RANGE    30
+    \    ${testResult}=    getQuickTestCurrentAction    ${handel}
+    \    log    ${testResult}
+    \    Exit For Loop If    '${testResult}' == 'TestEnded'
+    \    Sleep    20
+
+CLI-WAN-to-LAN-Auto
+    Telnet.Write    access-rule from WAN to LAN action deny
+    sleep    3
+    ${rtn}=    Telnet.read
+    ${a}=    check_if_contain    ${rtn}    edit
+    Telnet.Write    cancel
+    Telnet.Write    access-rule from WAN to LAN action allow
+    sleep    3
+    ${rtn}=    Telnet.read
+    ${b}=    check_if_contain    ${rtn}    edit
+    Telnet.Write    cancel
+    Run keyword if    ${a} == 1 and ${b} ==1    log    Please Check!
+    Run keyword if    ${a} == 1 and ${b} ==0    CLI-WAN-to-LAN-Modify-Allow
+    Run keyword if    ${a} == 0 and ${b} ==1    log    WAN to LAN already allowed!
+    Run keyword if    ${a} == 0 and ${b} ==0    CLI-WAN-to-LAN-Add-Allow
+    Telnet.Write    exit
+
+CLI-WAN-to-LAN-Modify-Allow
+    tel    access-rule from WAN to LAN action deny
+    sleep    1
+    tel    action allow
+    tel    commit
+    sleep    1
+    tel    exit
+    tel    commit
+
+Connect S6000 with S3148
+    [Arguments]    ${S6000_IP}    ${S3148_IP}    @{data}
+    [Documentation]    S600 Te 0/98 <--------------> S3148 Te 1/49
+    Comment    @{data}=    read xls file    topology.xlsx    ${type}
+    Comment    Telnet-login-switch    ${data[0]["S3148_IP"]}
+    Telnet-login-switch    ${S3148_IP}
+    : FOR    ${i}    IN    @{data}
+    \    ${vlan}    evaluate    int(${i["VLAN"]})
+    \    config_port_switchport    Te 1/49
+    \    config_tag_port    Te 1/49    ${vlan}
+    Telnet.Close Connection
+    Telnet-login-switch    ${S6000_IP}
+    : FOR    ${i}    IN    @{data}
+    \    ${vlan}    evaluate    int(${i["VLAN"]})
+    \    config_port_switchport    Te 0/98
+    \    config_tag_port    Te 0/98    ${vlan}
+    telnet.close connection
+
+twoLogin
+    Select Frame    id=authFrm
+    Clear Element Text    id=userName
+    Input Text    id=userName    admin
+    Clear Element Text    name=pwd
+    Input Password    name=pwd    password
+    ${value}    Get Value    name=pwd
+    Click Button    name=Submit
+    sleep    10
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Page Should Contain    This appliance is not registered
+    run keyword if    '${result}' == 'PASS'    Click Element    id=regLaterButt
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Page Should Contain    OK to preempt existing administrator?
+    run keyword if    '${result}' == 'PASS'    Click Button    name=Continue
+    sleep    1
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Handle Alert    action=ACCEPT
+    sleep    1
+
+CLI-MAX-SPI-Connections
+    [Arguments]    ${time}
+    [Documentation]    Switch to Max DPI Connections from Console
+    Telnet.Write    configure
+    Telnet.Write    firewall
+    Telnet.Write    connections highest
+    Telnet.Write    commit
+    Telnet.Set Prompt    [cancel]:
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Telnet.Read Until Prompt
+    run keyword if    '${result}' == 'PASS'    write yes and sleep    ${time}
+
+Connect S6000-1 with S6000-2
+    [Arguments]    ${S6000_IP}    ${S6000-2_IP}    @{data}
+    [Documentation]    if test port of IXIA is 4/13~4/16,need to add test vlan into portchannel. \ S6000-1 port-channnel 1 <--------------> S6000-2 port-channnel 1
+    Telnet-login-switch    ${S6000_IP}
+    ${vlan}    evaluate    int(${data[1]["VLAN"]})
+    config_port_switchport    port-channel 1
+    config_tag_port    port-channel 1    ${vlan}
+    config_tag_port    port-channel 1    4001
+    Telnet.Close Connection
+    Telnet-login-switch    ${S6000-2_IP}
+    config_port_switchport    port-channel 1
+    config_tag_port    port-channel 1    ${vlan}
+    config_tag_port    port-channel 1    4001
+    Telnet.Close Connection
+
+Clear_remaining_configuration_Swithch
+    [Arguments]    ${S6000-1_IP}    ${S6000-2_IP}    ${S3148_IP}    ${vlan}
+    Telnet-login-switch    ${S6000-1_IP}
+    Telnet.Write    no interface vlan ${vlan}
+    Telnet.Write    exit
+    Telnet.Close Connection
+    Telnet-login-switch    ${S6000-2_IP}
+    Telnet.Write    no interface vlan ${vlan}
+    Telnet.Write    exit
+    Telnet.Close Connection
+    Telnet-login-switch    ${S3148_IP}
+    Telnet.Write    no interface vlan ${vlan}
+    Telnet.Write    exit
+    Telnet.Close Connection
+
+CLI-config-Add-VPN
+    [Arguments]    ${gw}    ${remote}    ${local}
+    tel    vpn
+    tel    policy site-to-site ${gw}
+    tel    auth-method shared-secret
+    tel    shared-secret 11111111
+    tel    exit
+    tel    bound-to zone WAN
+    tel    gateway primary ${gw}
+    tel    network local network ${local} /8
+    tel    network remote network ${remote} /8
+    tel    proposal ike authentication sha-256
+    tel    proposal ike dh-group 19
+    tel    proposal ike encryption aes-256
+    tel    proposal ike exchange ikev2
+    tel    proposal ipsec encryption aes-gcm16-256
+    tel    no proposal ipsec authentication
+    tel    keep-alive
+    tel    no suppress-trigger-packet
+    tel    commit
+    tel    exit
+    tel    exit
+
+CLI-Add AO
+    [Arguments]    ${remote}
+    tel    address-object ipv4 "${remote}" network ${remote} /8 ZONE VPN
+    tel    commit
+
+Connect S6000 with S3148 VPN
+    [Arguments]    ${S6000_IP}    ${S3148_IP}    ${vlanList}
+    [Documentation]    S600 Te 0/98 <--------------> S3148 Te 1/49
+    Comment    @{data}=    read xls file    topology.xlsx    ${type}
+    Comment    Telnet-login-switch    ${data[0]["S3148_IP"]}
+    Telnet-login-switch    ${S3148_IP}
+    : FOR    ${i}    IN ZIP    ${vlanList}
+    \    ${vlan}    set Variable    ${i}
+    \    config_port_switchport    Te 1/49
+    \    config_tag_port    Te 1/49    ${i}
+    Telnet.Close Connection
+    Telnet-login-switch    ${S6000_IP}
+    : FOR    ${i}    IN ZIP    ${vlanList}
+    \    ${vlan}    set Variable    ${i}
+    \    config_port_switchport    Te 0/98
+    \    config_tag_port    Te 0/98    ${vlan}
+
+enable tls
+    [Arguments]    ${ip}    ${username}    ${password}    ${webbrowser}
+    login_by_https_TLS_9800    ${ip}    ${username}    ${password}    ${webbrowser}
+    ${ww}=    get cookies
+    log    ${ww}
+    log to console    ${ww}
+    goto    https://${ip}/diag.html
+    Unselect Frame
+    sleep    5
+    Select Frame    id=outlookFrame
+    Click Button    xpath = /html/body/table/tbody/tr[1]/td//input
+    sleep    5
+    Unselect Frame
+    Select Frame    id=tabFrame
+    Execute Javascript    document.getElementById('enDisableSSL3').click()
+    Confirm Action
+
+login_by_https_TLS_9800
+    [Arguments]    ${ip}    ${username}    ${password}    ${webbrowser}
+    Open Browser    https://${ip}    ${webbrowser}
+    sleep    5
+    Select Frame    name=authFrm
+    Clear Element Text    id=userName
+    Input Text    id=userName    ${username}
+    Clear Element Text    name=pwd
+    Input Password    name=pwd    ${password}
+    ${value}    Get Value    name=pwd
+    Click Button    name=Submit
+    sleep    10
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Page Should Contain    This appliance is not registered
+    run keyword if    '${result}' == 'PASS'    Click Element    id=regLaterButt
+    sleep    5
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Page Should Contain    OK to preempt existing administrator?
+    run keyword if    '${result}' == 'PASS'    Click Button    name=Continue
+    sleep    1
+    comment    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Handle Alert    action=ACCEPT
+    sleep    10
+    Unselect Frame
+    ${curr_title}    get window titles
+    ${title}    Get From List    ${curr_title}    0
+    Select Window    title=${title}
+    ${a}    Run Keyword And Return Status    Page Should Contain element    id=authFrm
+    log    ${a}
+    Run keyword if    '${a}'=='False'    log    one login
+    ...    ELSE    run keywords    log    Need TWO LOGIN
+    ...    AND    twoLogin
+
+config S3148
+    [Arguments]    ${type}
+    ###串口登陆3148###
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${consoleserver_port}    evaluate    ${data[0]["3148-CONSOLEPORT"]}
+    CLI-login-switch    ${data[0]["3148-CONSOLE_SERVER"]}    ${consoleserver_port}
+    Telnet-login-switch    ${data[0]["S3148_IP"]}
+    ###配置 3148 PortS###
+    log to console    config 3148 ports!
+    : FOR    ${i}    IN    @{data}
+    \    config_port_switchport    ${i["UNTAG"]}
+    \    ${vlan}    evaluate    int(${i["VLAN"]})
+    \    write    no interface vlan ${vlan}
+    \    sleep    1
+    \    Read Until Prompt
+    \    ${result}    tel    do show interfaces switchport ${i["UNTAG"]}
+    \    ${nativlan_id}    get_native_vlan    ${result}    U\\s+(\\d+)
+    \    run keyword if    ${nativlan_id} == ${vlan}    log    the port has already configed
+    \    ...    ELSE IF    ${nativlan_id} == 1    config_native_vlan    ${i["UNTAG"]}    ${vlan}
+    \    ...    ELSE    change_native_vlan    ${i["UNTAG"]}    ${nativlan_id}    ${vlan}
+    \    config_tag_port    Te 1/49    ${vlan}
+    log to console    finish config 3148 switch!
+
+config S60
+    [Arguments]    ${type}
+    ###telnet登陆S60###
+    @{data}=    read xls file    topology.xlsx    ${type}
+    Telnet-login-switch    ${data[0]["S60_IP"]}
+    ###配置 S60 PortS###
+    log to console    config S60 ports!
+    : FOR    ${i}    IN    @{data}
+    \    config_port_switchport    ${i["UNTAG"]}
+    \    ${vlan}    evaluate    int(${i["VLAN"]})
+    \    write    no interface vlan ${vlan}
+    \    Read Until Prompt
+    \    ${result}    tel    do show interfaces switchport ${i["UNTAG"]}
+    \    ${nativlan_id}    get_native_vlan    ${result}    U\\s+(\\d+)
+    \    run keyword if    ${nativlan_id} == ${vlan}    log    the port has already configed
+    \    ...    ELSE IF    ${nativlan_id} == 1    config_native_vlan    ${i["UNTAG"]}    ${vlan}
+    \    ...    ELSE    change_native_vlan    ${i["UNTAG"]}    ${nativlan_id}    ${vlan}
+    \    config_tag_port    Te 0/48    ${vlan}
+    log to console    finish config S60 switch!
+
+config_S6000-2
+    [Arguments]    ${type}
+    ###串口登陆S6000-2###
+    @{data}=    read xls file    topology.xlsx    ${type}
+    Telnet-login-switch    ${data[0]["S6000-2_IP"]}
+    ${client_untag}    set Variable    te 0/52
+    ${lan_untag}    set Variable    te 0/53
+    ${client_vlan}    evaluate    4001
+    ${lan_vlan}    evaluate    int(${data[1]["VLAN"]})
+    ###配置Perf-sslvpn2 192###
+    log to console    config S6000-2 ports!
+    Telnet.Write    interface vlan ${client_vlan}
+    sleep    1
+    Telnet.Write    tagged Port-channel 1
+    sleep    1
+    ${result}    tel    do show interfaces switchport ${client_untag}
+    ${nativlan_id}    get_native_vlan    ${result}    U\\s+(\\d+)
+    run keyword if    ${nativlan_id} == ${client_vlan}    log    the port has already configed
+    ...    ELSE IF    ${nativlan_id} == 1    config_native_vlan    ${client_untag}    ${client_vlan}
+    ...    ELSE    change_native_vlan    ${client_untag}    ${nativlan_id}    ${client_vlan}
+    sleep    1
+    Telnet.Write    tagged Port-channel 1
+    sleep    1
+    Telnet.Write    no shutdown
+    sleep    1
+    ###配置Perf-sslvpn2 LAN###
+    Telnet.Write    interface vlan ${lan_vlan}
+    sleep    1
+    Telnet.Write    tagged Port-channel 1
+    sleep    1
+    ${result}    tel    do show interfaces switchport ${lan_untag}
+    ${nativlan_id}    get_native_vlan    ${result}    U\\s+(\\d+)
+    run keyword if    ${nativlan_id} == ${lan_vlan}    log    the port has already configed
+    ...    ELSE IF    ${nativlan_id} == 1    config_native_vlan    ${lan_untag}    ${lan_vlan}
+    ...    ELSE    change_native_vlan    ${lan_untag}    ${nativlan_id}    ${lan_vlan}
+    sleep    1
+    Telnet.Write    no shutdown
+    sleep    1
+    telnet.close connection
+
+config sslvpn
+    [Arguments]    ${type}    ${interface}
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ${ip}    set Variable    ${data[0]["CONSOLE_SERVER"]}
+    ${port}    evaluate    ${data[0]["CONSOLE_TELNETPORT"]}
+    CLI-login-firewall    ${ip}    ${port}
+    Telnet.write    ssl-vpn server
+    sleep    1
+    Telnet.write    access WAN
+    Telnet.write    session-timeout 9999
+    Telnet.write    commit
+    sleep    10
+    Telnet.Set Prompt    \#
+    Telnet.write    \r
+    Telnet.Read Until Prompt
+    Telnet.write    exit
+    sleep    1
+    Telnet.write    ssl-vpn profile
+    sleep    2
+    Telnet.write    device-profile "Default Device Profile"
+    sleep    2
+    Telnet.write    network-address ipv4 network 172.25.100.0 /24
+    sleep    3
+    ${rtn}    Telnet.read
+    ${a}=    check_if_contain    ${rtn}    [yes]:
+    Run keyword if    ${a} == 1    Telnet.write    yes
+    ...    ELSE    sleep    1
+    Telnet.Set Prompt    \#
+    Telnet.write    \r
+    Telnet.Read Until Prompt
+    Telnet.write    routes
+    Telnet.write    route name "${interface} Subnet"
+    Telnet.write    commit
+    sleep    10
+    Telnet.write    exit
+    Telnet.write    exit
+    Telnet.write    exit
+    Telnet.write    user local
+    Telnet.write    user sslvpn
+    Telnet.write    password password
+    Telnet.write    member-of "SSLVPN Services"
+    Telnet.write    vpn-client-access name "${interface} Subnet"
+    Telnet.write    commit
+    sleep    10
+    Telnet.close connection
+    log to console    Finished config sslvpn!!
+
+run_sslvpn
+    [Arguments]    ${type}    ${num}
+    log to console    Add SSLVPN and create nat!!
+    ${script_name}    evaluate    'RF_'+'${type}'+'_'+'${num}'+'_sslvpn.sh'
+    SSHLibrary.Open Connection    10.7.100.194    port= 22    timeout=5
+    SSHLibrary.Login    sonicwall    sonicwall    delay=5
+    SSHLibrary.Write    cd /home/sonicwall/sslvpn
+    SSHLibrary.Write    sudo su
+    sleep    2
+    SSHLibrary.Write    sonicwall
+    sleep    1
+    SSHLibrary.Write    ./nxkill.sh
+    sleep    3
+    SSHLibrary.Write    ./nxkill.sh
+    sleep    3
+    SSHLibrary.Write    \r
+    sleep    5
+    :FOR    ${i}    IN RANGE    ${num}
+    \    ${error}    add_SSLVPN
+    \    ${i}    run keyword if    ${error}==1    set variable    0
+    SSHLibrary.Write    sed \'s/102/${num}/g\' nat_RF.sh > ${script_name}
+    sleep    2
+    SSHLibrary.Write    chmod 777 ${script_name}
+    sleep    3
+    SSHLibrary.Write    ./${script_name}
+    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P' or '${type}' == 'SOHO-250' or '${type}' == 'SOHOW'    sleep    60
+    ...    ELSE IF    '${type}' == '2600' or '${type}' == '2650' or '${type}' == '3600' or '${type}' == '3650' or '${type}' == '4600' or '${type}' == '4650' or '${type}' == '5600' or '${type}' == '5650' or '${type}' == '6600' or '${type}' == '6650'    sleep    200
+    ...    ELSE    sleep    240
+    SSHLibrary.Write    iptables -t nat -nvL
+    sleep    2
+    ${rtn}    SSHLibrary.read
+    log to console    ${rtn}
+
+add_SSLVPN
+    ${r}    ${error}    connect_SSLVPN
+    ${r}    ${error}    run keyword if    ${r}==0 and ${error}==0    run keywords    log to console    Connected sslvpn failed!!, try to connect again!
+    ...    AND    add_SSLVPN_tryAgain
+    run keyword if    ${error}==1    run keywords    SSHLibrary.Write    \r
+    ...    AND    SSHLibrary.Write    ./nxkill.sh
+    ...    AND    sleep    5
+    SSHLibrary.Write    \r
+    [Return]    ${error}
+
+connect_SSLVPN
+    SSHLibrary.Write    ./associate_RF.sh
+    sleep    17
+    ${rtn}    SSHLibrary.read
+    ${r}=    check if contain    ${rtn}    NetExtender connected successfully
+    ${error}=    check if contain    ${rtn}    stdin is not tty terminal
+    [Return]    ${r}    ${error}
+
+CLI-MAX-DPI-Connections
+    [Arguments]    ${time}
+    Telnet.Write    firewall
+    Telnet.Write    connections optimized
+    Telnet.Write    commit
+    Telnet.Set Prompt    [cancel]:
+    ${result}    ${returnvalue}    Run Keyword And Ignore Error    Telnet.Read Until Prompt
+    run keyword if    '${result}' == 'PASS'    write yes and sleep    ${time}
+    Telnet.Write    exit
+
+CLI-security maximum
+    tel    security-services
+    tel    security maximum
+    tel    commit
+    tel    exit
+
+CLI-Enable-IPS-GAV-AntiS
+    ###Enable IPS###
+    Telnet.Write    intrusion-prevention
+    Telnet.Write    enable
+    Telnet.Write    signature-group high-priority detect-all
+    Telnet.Write    signature-group high-priority prevent-all
+    Telnet.Write    signature-group medium-priority detect-all
+    Telnet.Write    signature-group medium-priority prevent-all
+    Telnet.Write    signature-group low-priority detect-all
+    Telnet.Write    commit
+    sleep    10
+    Telnet.Write    exit
+    ###Enable Gateway Anti-Virus###
+    Telnet.Write    gateway-antivirus
+    Telnet.Write    enable
+    Telnet.Write    inbound-inspection http
+    Telnet.Write    outbound-inspection http
+    Telnet.Write    commit
+    sleep    10
+    Telnet.Write    exit
+    ###Enable Anti-Spyware###
+    Telnet.Write    anti-spyware
+    Telnet.Write    enable
+    Telnet.Write    signature-group high-danger detect-all
+    Telnet.Write    signature-group high-danger prevent-all
+    Telnet.Write    signature-group medium-danger detect-all
+    Telnet.Write    signature-group medium-danger prevent-all
+    Telnet.Write    signature-group low-danger detect-all
+    Telnet.Write    commit
+    sleep    10
+    Telnet.Write    exit
+
+CLI-Disable-IPS-GAV-AntiS
+    ###Enable IPS###
+    Telnet.Write    intrusion-prevention
+    Telnet.Write    no enable
+    Telnet.Write    no signature-group high-priority detect-all
+    Telnet.Write    no signature-group high-priority prevent-all
+    Telnet.Write    no signature-group medium-priority detect-all
+    Telnet.Write    no signature-group medium-priority prevent-all
+    Telnet.Write    no signature-group low-priority detect-all
+    Telnet.Write    commit
+    sleep    10
+    Telnet.Write    exit
+    ###Enable Gateway Anti-Virus###
+    Telnet.Write    gateway-antivirus
+    Telnet.Write    no enable
+    Telnet.Write    no inbound-inspection http
+    Telnet.Write    no outbound-inspection http
+    Telnet.Write    commit
+    sleep    10
+    Telnet.Write    exit
+    ###Enable Anti-Spyware###
+    Telnet.Write    anti-spyware
+    Telnet.Write    no enable
+    Telnet.Write    no signature-group high-danger detect-all
+    Telnet.Write    no signature-group high-danger prevent-all
+    Telnet.Write    no signature-group medium-danger detect-all
+    Telnet.Write    no signature-group medium-danger prevent-all
+    Telnet.Write    no signature-group low-danger detect-all
+    Telnet.Write    commit
+    sleep    10
+    Telnet.Write    exit
+
+no_security_pre
+    [Arguments]    ${type}    ${num}
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config SPI enable####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    300
+    CLI-Disable-IPS-GAV-AntiS
+    Telnet.Close Connection
+    ###open IxloadGW###
+    open_IxloadGW
+    Log to console    Connecting to IxLoad gateway. Please wait for a new session to come up
+    ###Config sslvpn and create \ \ NAT###
+    config sslvpn    ${type}
+    run sslvpn    ${type}    ${num}
+
+all_security_pre
+    [Arguments]    ${type}    ${num}
+    @{data}=    read xls file    topology.xlsx    ${type}
+    ###config SPI enable####
+    ${consoleserver_port}    evaluate    int(${data[0]["CONSOLE_TELNETPORT"]})
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-MAX-DPI-Connections    350
+    Telnet.Close Connection
+    CLI-login-firewall    ${data[0]["CONSOLE_SERVER"]}    ${consoleserver_port}
+    CLI-Enable-IPS-GAV-AntiS
+    Telnet.Close Connection
+    ###Config sslvpn and create \ \ NAT###
+    run keyword if    '${type}' == 'TZ-300' or '${type}' == 'TZ-400' or '${type}' == 'TZ-500W' or '${type}' == 'TZ-600' or '${type}' == 'TZ-350' or '${type}' == 'TZ-300P' or '${type}' == 'TZ-600P' or '${type}' == 'SOHO-250' or '${type}' == 'SOHOW'    config sslvpn    ${type}    X0
+    ...    ELSE IF    '${type}' == '3650' or '${type}' == '6650'    config sslvpn    ${type}    X20
+    ...    ELSE IF    '${type}' == '4650' or '${type}' == '5650'    config sslvpn    ${type}    X24
+    ...    ELSE    config sslvpn    ${type}    X16
+    run sslvpn    ${type}    ${num}
+
+add_SSLVPN_loopRun
+    [Arguments]    ${num}
+    : FOR    ${i}    IN RANGE    ${num}
+    \    ${r}    add_SSLVPN
+    \    EXIT for loop if    ${r}==0
+
+add_SSLVPN_tryAgain
+    : FOR    ${i}    IN RANGE    10
+    \    ${r}    ${error}    connect_SSLVPN
+    \    run keyword if    ${r}==0 and ${error}==0    run keywords    log to console    Connected sslvpn failed!!, try to connect again!
+    [Return]    ${r}    ${error}

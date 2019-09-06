@@ -1,0 +1,37 @@
+Target,Default,Actual,Comments
+8192,14,8192,"config(18B1698A6180)# 
+config(18B1698A6180)# diag show multicore
+MultiCore Utilization (%)
+Core  0:  40
+Core  1:  70
+Core  2:  56
+Core  3:  15
+Core  4:  13
+Core  5:  12
+Core  6:  12
+Core  7:  11
+Core  8:  69
+Core  9:  54
+Core 10:  15
+Core 11:  13
+Core 12:  12
+Core 13:  12
+Core 14:  12
+Core 15:  11
+Core 16:  71
+Core 17:  64
+Core 18:  48
+Core 19:  20
+Core 20:  15
+Core 21:  14
+Core 22:  14
+Core 23:  13
+Core 24:  71
+Core 25:  64
+Core 26:  48
+Core 27:  20
+Core 28:  15
+Core 29:  14
+Core 30:  13
+Core 31:  13
+config(18B1698A6180)# "

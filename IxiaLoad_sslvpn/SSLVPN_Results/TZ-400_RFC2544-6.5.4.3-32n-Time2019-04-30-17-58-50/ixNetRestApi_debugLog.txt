@@ -1,0 +1,256 @@
+
+17:58:50.281000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/availableHardware/chassis
+	DATA: {"hostname": "10.7.1.234"}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 201
+
+
+connectIxChassis 10.7.1.234: Status: ready. Wait 1/30 seconds
+
+17:58:52.359000: Verify if ports are currently owned
+
+17:58:52.360000: Querying for 10.7.1.234/2/11
+
+17:58:52.360000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/operations/query
+	DATA: {"selects": [{"nodes": [{"node": "chassis", "where": [{"regex": "10.7.1.234", "property": "ip"}], "properties": ["ip"]}, {"node": "card", "where": [{"regex": "2", "property": "cardId"}], "properties": ["cardId"]}, {"node": "port", "where": [{"regex": "11", "property": "portId"}], "properties": ["portId", "owner"]}], "from": "/availableHardware"}]}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+waitForComplete:
+	State: SUCCESS 
+
+17:58:53.372000: Port currently owned by: IxNetwork/win7-ixia-pc1/sonicwall
+
+17:58:53.372000: Port is still owned: 10.7.1.234/cardId:2/portId:11
+
+17:58:53.372000: Querying for 10.7.1.234/2/12
+
+17:58:53.372000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/operations/query
+	DATA: {"selects": [{"nodes": [{"node": "chassis", "where": [{"regex": "10.7.1.234", "property": "ip"}], "properties": ["ip"]}, {"node": "card", "where": [{"regex": "2", "property": "cardId"}], "properties": ["cardId"]}, {"node": "port", "where": [{"regex": "12", "property": "portId"}], "properties": ["portId", "owner"]}], "from": "/availableHardware"}]}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+waitForComplete:
+	State: SUCCESS 
+
+17:58:54.384000: Port currently owned by: IxNetwork/win7-ixia-pc1/sonicwall
+
+17:58:54.384000: Port is still owned: 10.7.1.234/cardId:2/portId:12
+
+17:58:54.385000: Ports are still owned: [[u'10.7.1.234', u'2', u'11'], [u'10.7.1.234', u'2', u'12']]
+
+17:58:54.390000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/vport
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+17:58:55.402000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/vport
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+17:58:56.417000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/vport/operations/releaseport
+	DATA: {"arg1": ["/api/v1/sessions/1/ixnetwork/vport/1", "/api/v1/sessions/1/ixnetwork/vport/2"]}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+waitForComplete:
+	State: SUCCESS 
+
+17:58:58.449000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/availableHardware/chassis
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+17:58:59.462000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/availableHardware/chassis/1/card/2/port/11/operations/clearownership
+	DATA: {"arg1": ["/api/v1/sessions/1/ixnetwork/availableHardware/chassis/1/card/2/port/11"]}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+17:59:01.115000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/availableHardware/chassis/1/card/2/port/12/operations/clearownership
+	DATA: {"arg1": ["/api/v1/sessions/1/ixnetwork/availableHardware/chassis/1/card/2/port/12"]}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+17:59:02.210000: Reading saved config file
+
+17:59:02.212000: Uploading file to server: http://localhost:11009/api/v1/sessions/1/ixnetwork/files?filename=TZ-400_SSLVPN_RFC2544_FrameSize1240.json
+
+17:59:02.213000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/files?filename=TZ-400_SSLVPN_RFC2544_FrameSize1240.json
+	DATA: <StringIO.StringIO instance at 0x03D8A828>
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 201
+
+17:59:03.252000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/resourceManager/operations/importconfigfile
+	DATA: {"arg1": "/api/v1/sessions/1/ixnetwork/resourceManager", "arg2": "/api/v1/sessions/1/ixnetwork/files/TZ-400_SSLVPN_RFC2544_FrameSize1240.json", "arg3": true}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+waitForComplete:
+	State: IN_PROGRESS 
+	State: IN_PROGRESS: Wait 1/300 seconds
+	State: IN_PROGRESS: Wait 2/300 seconds
+	State: IN_PROGRESS: Wait 3/300 seconds
+	State: IN_PROGRESS: Wait 4/300 seconds
+	State: IN_PROGRESS: Wait 5/300 seconds
+	State: IN_PROGRESS: Wait 6/300 seconds
+	State: IN_PROGRESS: Wait 7/300 seconds
+	State: IN_PROGRESS: Wait 8/300 seconds
+	State: IN_PROGRESS: Wait 9/300 seconds
+	State: IN_PROGRESS: Wait 10/300 seconds
+	State: IN_PROGRESS: Wait 11/300 seconds
+	State: IN_PROGRESS: Wait 12/300 seconds
+	State: SUCCESS
+
+17:59:34.886000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/vport
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+17:59:35.899000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/operations/assignports
+	DATA: {"arg1": [{"arg1": "10.7.1.234", "arg2": "2", "arg3": "11"}, {"arg1": "10.7.1.234", "arg2": "2", "arg3": "12"}], "arg2": [], "arg3": ["/api/v1/sessions/1/ixnetwork/vport/1", "/api/v1/sessions/1/ixnetwork/vport/2"], "arg4": true}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+waitForComplete:
+	State: SUCCESS 
+
+17:59:37.417000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/vport
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+17:59:38.479000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/vport
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+17:59:39.486000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/vport/1
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+17:59:40.498000: 
+	PATCH: http://localhost:11009/api/v1/sessions/1/ixnetwork/vport/1
+	DATA: {'name': u'2/11'}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+17:59:41.517000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/vport/2
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+17:59:42.521000: 
+	PATCH: http://localhost:11009/api/v1/sessions/1/ixnetwork/vport/2
+	DATA: {'name': u'2/12'}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+17:59:43.562000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/quickTest
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+17:59:44.574000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/quickTest
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+17:59:45.579000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/quickTest/rfc2544throughput/1
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+17:59:46.580000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/quickTest
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+17:59:47.590000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/quickTest/rfc2544throughput/1
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+17:59:48.605000: 
+startQuickTest:http://localhost:11009/api/v1/sessions/1/ixnetwork/quickTest/operations/start
+
+17:59:48.606000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/quickTest/operations/start
+	DATA: {"arg1": "/api/v1/sessions/1/ixnetwork/quickTest/rfc2544throughput/1"}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+waitForComplete:
+	State: SUCCESS 
+
+18:08:38.528000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/quickTest/rfc2544throughput/1/results
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+18:08:39.549000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/quickTest/rfc2544throughput/1/results
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+18:08:40.557000: 
+getQuickTestCsvFiles: C:\Users\sonicwall\AppData\Local\Ixia\IxNetwork\data\result\DP.Rfc2544Tput\b5c6ebf7-2502-4283-84b2-b8288a19097d\Run0001
+
+18:08:40.557000: 
+copyFileWindowsToLocalWindows: From: C:\Users\sonicwall\AppData\Local\Ixia\IxNetwork\data\result\DP.Rfc2544Tput\b5c6ebf7-2502-4283-84b2-b8288a19097d\Run0001\AggregateResults.csv to C:\\IxiaLoad_sslvpn\\SSLVPN_Results\\TZ-400_RFC2544-6.5.4.3-32n-Time2019-04-30-17-58-50
+
+
+18:08:40.558000: 
+You need to manually remove the saved copy in: C:\Users\sonicwall\AppData\Local\Ixia\IxNetwork\data\result\DP.Rfc2544Tput\b5c6ebf7-2502-4283-84b2-b8288a19097d\Run0001\AggregateResults.csv
+
+18:08:40.558000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/operations/copyfile
+	DATA: {"arg1": "C:\\Users\\sonicwall\\AppData\\Local\\Ixia\\IxNetwork\\data\\result\\DP.Rfc2544Tput\\b5c6ebf7-2502-4283-84b2-b8288a19097d\\Run0001\\AggregateResults.csv", "arg2": "C:\\\\IxiaLoad_sslvpn\\\\SSLVPN_Results\\\\TZ-400_RFC2544-6.5.4.3-32n-Time2019-04-30-17-58-50\\AggregateResults.csv"}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+18:08:46.604000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/vport
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+18:08:47.615000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/vport
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+18:08:48.624000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/vport/operations/releaseport
+	DATA: {"arg1": ["/api/v1/sessions/1/ixnetwork/vport/1", "/api/v1/sessions/1/ixnetwork/vport/2"]}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+waitForComplete:
+	State: SUCCESS 
+
+18:08:50.656000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork/availableHardware/chassis
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
+
+18:08:51.671000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/availableHardware/chassis/1/card/2/port/11/operations/clearownership
+	DATA: {"arg1": ["/api/v1/sessions/1/ixnetwork/availableHardware/chassis/1/card/2/port/11"]}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202
+
+18:08:53.428000: 
+	POST: http://localhost:11009/api/v1/sessions/1/ixnetwork/availableHardware/chassis/1/card/2/port/12/operations/clearownership
+	DATA: {"arg1": ["/api/v1/sessions/1/ixnetwork/availableHardware/chassis/1/card/2/port/12"]}
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 202

@@ -1,0 +1,11 @@
+Date: <bound method Connect.getDate of <IxNetRestApi.Connect instance at 0x034D6738>>
+Time: <bound method Connect.getTime of <IxNetRestApi.Connect instance at 0x034D6738>>
+
+
+16:13:23.989000: 
+Verifying API server connection: http://localhost:11009/api/v1/sessions/1/ixnetwork
+
+16:13:25.036000: 
+	GET: http://localhost:11009/api/v1/sessions/1/ixnetwork
+	HEADERS: {'content-type': 'application/json'}
+	STATUS CODE: 200
